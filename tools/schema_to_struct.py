@@ -99,7 +99,7 @@ def generate_struct_code(name: str, struct_def: dict):
 
 
 def start():
-    with open('sample_definition1.json') as json_file:
+    with open('../sample_schema/sample_definition1.json') as json_file:
         data = json.load(json_file)
         struct_def = generate_object(data)
         struct_cache["Struct"] = struct_def

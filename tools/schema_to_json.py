@@ -75,7 +75,7 @@ def generate_object(obj_def: dict) -> dict:
 
 
 def start():
-    with open('sample_definition1.json') as json_file:
+    with open('../sample_schema/sample_definition1.json') as json_file:
         data = json.load(json_file)
         sample_json = generate_object(data)
 

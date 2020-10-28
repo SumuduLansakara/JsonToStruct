@@ -116,7 +116,7 @@ class SchemaDecoder:
 
 if __name__ == '__main__':
     sd = SchemaDecoder()
-    sd.load_from_file("sample_definition1.json")
+    sd.load_from_file("sample_schema/sample_definition1.json")
 
     cg = CodeGenerator()
     cg.generate(sd.struct_definitions)

@@ -59,7 +59,7 @@ def start():
         "description": "",
         "properties": {}
     }
-    with open('sample_json1.json') as json_file:
+    with open('../sample_json/sample_json1.json') as json_file:
         data = json.load(json_file)
         schema["properties"] = generate_object_schema(data)
 
