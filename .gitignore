@@ -2,3 +2,4 @@
 /*.json
 /sample_json/
 /sample_schema/
+/__pycache__/
