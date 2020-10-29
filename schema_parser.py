@@ -58,7 +58,7 @@ class SchemaParser:
             if isinstance(ref_def, StructTypeDef):
                 return ref_def.struct_name
 
-            raise NotImplementedError(f"Unsupported reference type as array member: {ref_def}")
+            raise NotImplementedError(f"Unsupported reference type as array member [{ref_def}]")
 
         if 'type' not in item_def:
             raise ValueError(f"Property without type: {array_name} [{item_def}]")
@@ -87,7 +87,7 @@ class SchemaParser:
             return EnumTypeDef(prop_name.capitalize(), [e for e in enum_def])
 
         if 'type' not in prop_def:
-            raise ValueError(f"Property without type: {prop_name} [{prop_def}]")
+            raise ValueError(f"Property without type: {reg_key}")
 
         prop_type = prop_def['type']
         if prop_type in ['boolean', 'integer', 'number', 'string']:
@@ -95,7 +95,7 @@ class SchemaParser:
 
         if prop_type == 'array':
             if 'items' not in prop_def:
-                raise ValueError("Array definition without items")
+                raise ValueError(f"Array definition without items [{reg_key}]")
             item_def = self._get_array_item_type(reg_key, prop_name, prop_def['items'])
             return ArrayAliasDef(prop_name.capitalize(), item_def)
 
@@ -103,8 +103,19 @@ class SchemaParser:
             members = self._get_struct_members(reg_key, prop_def['properties'])
             return StructTypeDef(prop_name.capitalize(), members)
 
-    def parse_root_level(self, base_uri: str, schema_def: Dict):
+    def parse_root_level(self, base_uri: str, namespace: str, schema_def: Dict):
+        self._type_registry.set_namespace(namespace)
         for k, v in schema_def.items():
             key = RegKey(base_uri, k)
-            type_def = self._create_typedef(key, k, v)
-            self._type_registry.add(key, type_def)
+            try:
+                type_def = self._create_typedef(key, k, v)
+                self._type_registry.add(key, type_def)
+            except KeyError as e:
+                print(f"KeyError: {e}")
+                raise
+            except ValueError as e:
+                print(f"ValueError: {e}")
+            except Exception as e:
+                print(f"Error: {e}")
+                if 'Envelop' not in e:
+                    raise
