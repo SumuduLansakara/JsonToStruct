@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from typing import Dict, List, Union
 
-from type_defs import RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef
+from schema_parser.type_defs import RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef
 
 
 class RegKey:

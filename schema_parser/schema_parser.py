@@ -1,8 +1,8 @@
 from typing import List, Union, Dict
 
-from type_defs import MemberVarDef, StructTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, RefTypeDef, \
+from schema_parser.type_defs import MemberVarDef, StructTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, RefTypeDef, \
     ReferencedMemberVarDef
-from type_registry import TypeRegistry, RegKey
+from schema_parser.type_registry import TypeRegistry, RegKey
 
 
 class SchemaParser:

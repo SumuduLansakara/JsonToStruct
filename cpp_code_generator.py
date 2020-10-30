@@ -1,7 +1,8 @@
 from typing import Dict, List
 
-from type_defs import BasicAliasDef, ArrayAliasDef, EnumTypeDef, StructTypeDef, MemberVarDef, ReferencedMemberVarDef
-from type_registry import TypeRegistry, RegKey
+from schema_parser.type_defs import BasicAliasDef, ArrayAliasDef, EnumTypeDef, StructTypeDef, MemberVarDef, \
+    ReferencedMemberVarDef
+from schema_parser.type_registry import TypeRegistry, RegKey
 
 
 class LineBuffer:

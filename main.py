@@ -1,24 +1,16 @@
-import json
-
 from cpp_code_generator import CodeGenerator
-from schema_parser import SchemaParser
+from schema_parser.schema_batch_parser import SchemaBatchParser
 
 
 def start():
-    parser = SchemaParser()
+    batch_parser = SchemaBatchParser()
+    batch_parser.set_dir_offset("sample_schema")
+    batch_parser.add_schema_file('core.json', 'common')
+    # batch_parser.add_schema_file('triggerBindingConfiguration.json', 'configs')
+    # batch_parser.add_schema_file('triggerConfiguration.json', 'configs')
+    batch_parser.parse()
 
-    build_order = [
-        ('core', 'common'),
-        ('triggerBindingConfiguration', 'configs'),
-        ('triggerConfiguration', 'configs')
-    ]
-
-    for schema, namespace in build_order:
-        with open(f"sample_schema/{schema}.json") as j_file:
-            schema_def = json.load(j_file)
-            parser.parse_root_level('#/definitions', namespace, schema_def["definitions"])
-
-    code_gen = CodeGenerator(parser.type_registry)
+    code_gen = CodeGenerator(batch_parser.type_registry)
     code_gen.generate()
 
 
