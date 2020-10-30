@@ -3,7 +3,11 @@ from __future__ import annotations
 import hashlib
 from typing import Dict, List, Union
 
-from schema_parser.type_defs import RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef
+from schema_parser.type_defs.array_alias import ArrayAlias
+from schema_parser.type_defs.enum_type import EnumType
+from schema_parser.type_defs.ref_type import RefType
+from schema_parser.type_defs.simple_alias import SimpleAlias
+from schema_parser.type_defs.struct_type import StructType
 
 
 class RegKey:
@@ -31,7 +35,7 @@ class RegKey:
 
 
 class TypeRegistry:
-    _type_registry: Dict[RegKey, Union[RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef]]
+    _type_registry: Dict[RegKey, Union[RefType, EnumType, SimpleAlias, ArrayAlias, StructType]]
     _namespace_map: Dict[RegKey, str]
     _current_namespace: str
 
@@ -43,11 +47,11 @@ class TypeRegistry:
     def __iter__(self):
         return iter(self._type_registry.items())
 
-    def add(self, key: RegKey, type_def: Union[RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef]):
+    def add(self, key: RegKey, type_def: Union[RefType, EnumType, SimpleAlias, ArrayAlias, StructType]):
         self._type_registry[key] = type_def
         self._namespace_map[key] = self._current_namespace
 
-    def get(self, key: RegKey) -> Union[RefTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, StructTypeDef]:
+    def get(self, key: RegKey) -> Union[RefType, EnumType, SimpleAlias, ArrayAlias, StructType]:
         if key not in self._type_registry:
             raise KeyError(f"No such key: {key}")
         return self._type_registry[key]

@@ -6,20 +6,12 @@ from schema_parser.schema_parser import SchemaParser
 
 
 class SchemaFile:
-    _file_path: str
-    _namespace: str
+    file_path: str
+    namespace: str
 
     def __init__(self, file_path: str, namespace: str):
-        self._file_path = file_path
-        self._namespace = namespace
-
-    @property
-    def file_path(self):
-        return self._file_path
-
-    @property
-    def namespace(self):
-        return self._namespace
+        self.file_path = file_path
+        self.namespace = namespace
 
 
 class SchemaBatchParser:
