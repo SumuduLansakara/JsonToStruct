@@ -1,7 +1,7 @@
 from typing import Dict, List
 
-from type_defs import BasicAliasDef, ArrayAliasDef, EnumTypeDef, StructTypeDef, MemberVarDef
-from type_registry import TypeRegistry
+from type_defs import BasicAliasDef, ArrayAliasDef, EnumTypeDef, StructTypeDef, MemberVarDef, ReferencedMemberVarDef
+from type_registry import TypeRegistry, RegKey
 
 
 class LineBuffer:
@@ -29,8 +29,10 @@ class LineBuffer:
 
 class CodeGenerator:
     _cpp_type_map: Dict[str, str]
+    _type_registry: TypeRegistry
 
-    def __init__(self):
+    def __init__(self, type_registry: TypeRegistry):
+        self._type_registry = type_registry
         self._cpp_type_map = {
             "boolean": "bool",
             "integer": "std::int64",
@@ -71,6 +73,21 @@ class CodeGenerator:
                 pass
             if isinstance(prop, EnumTypeDef):
                 pass
+            if isinstance(prop, ReferencedMemberVarDef):
+                ref_key = RegKey(*prop.ref_type_def.ref_target_uri.split('/'))
+                ref_type = self._type_registry.get(ref_key)
+                type_name: str
+                if isinstance(ref_type, StructTypeDef):
+                    type_name = ref_type.struct_name
+                elif isinstance(ref_type, EnumTypeDef):
+                    type_name = ref_type.enum_name
+                elif isinstance(ref_type, BasicAliasDef):
+                    type_name = ref_type.alias_name
+                elif isinstance(ref_type, ArrayAliasDef):
+                    type_name = ref_type.alias_name
+                else:
+                    raise RuntimeError(f"Referenced type definition not found! {ref_key}")
+                code.append(f"    {self.get_cpp_type(type_name)} {prop.member_var_name};")
             if isinstance(prop, MemberVarDef):
                 code.append(f"    {self.get_cpp_type(prop.member_var_type)} {prop.member_var_name};")
         code.append("")
@@ -79,14 +96,14 @@ class CodeGenerator:
         code.append("}")
         return code
 
-    def generate(self, type_registry: TypeRegistry):
+    def generate(self):
         basic_aliases: Dict[str, List] = {}
         array_aliases: Dict[str, List] = {}
         enum_defs: Dict[str, List] = {}
         struct_defs: Dict[str, List] = {}
 
-        for key, type_def in type_registry:
-            ns = type_registry.get_namespace(key)
+        for key, type_def in self._type_registry:
+            ns = self._type_registry.get_namespace(key)
             if isinstance(type_def, BasicAliasDef):
                 c = self.generate_basic_type_alias(type_def)
 

@@ -9,8 +9,8 @@ def start():
 
     build_order = [
         ('core', 'common'),
-        # ('triggerBindingConfiguration', 'configurations'),
-        # ('triggerConfiguration', 'configs')
+        ('triggerBindingConfiguration', 'configs'),
+        ('triggerConfiguration', 'configs')
     ]
 
     for schema, namespace in build_order:
@@ -18,8 +18,8 @@ def start():
             schema_def = json.load(j_file)
             parser.parse_root_level('#/definitions', namespace, schema_def["definitions"])
 
-    code_gen = CodeGenerator()
-    code_gen.generate(parser.type_registry)
+    code_gen = CodeGenerator(parser.type_registry)
+    code_gen.generate()
 
 
 if __name__ == '__main__':

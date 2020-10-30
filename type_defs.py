@@ -61,6 +61,21 @@ class EnumTypeDef:
         return json.dumps(self.dict(), indent=4)
 
 
+class RefTypeDef:
+    ref_target_uri: str
+
+    def __init__(self, ref_target_uri: str):
+        self.ref_target_uri = ref_target_uri
+
+    def dict(self):
+        return {
+            "ref_target_uri": self.ref_target_uri
+        }
+
+    def __str__(self):
+        return json.dumps(self.dict(), indent=4)
+
+
 class MemberVarDef:
     member_var_name: str
     member_var_type: str
@@ -80,11 +95,31 @@ class MemberVarDef:
         return json.dumps(self.dict(), indent=4)
 
 
+class ReferencedMemberVarDef:
+    member_var_name: str
+    ref_type_def: RefTypeDef
+
+    def __init__(self, member_var_name: str, ref_type: RefTypeDef):
+        self.member_var_name = member_var_name
+        self.ref_type_def = ref_type
+
+    def dict(self):
+        return {
+            "kind": "referenced_member_variable",
+            "ref_type_def": self.ref_type_def.dict(),
+            "name": self.member_var_name,
+        }
+
+    def __str__(self):
+        return json.dumps(self.dict(), indent=4)
+
+
 class StructTypeDef:
     struct_name: str
-    properties: List[Union[MemberVarDef, StructTypeDef, EnumTypeDef]]
+    properties: List[Union[MemberVarDef, ReferencedMemberVarDef, StructTypeDef, EnumTypeDef]]
 
-    def __init__(self, struct_name: str, properties: List[MemberVarDef]):
+    def __init__(self, struct_name: str,
+                 properties: List[Union[MemberVarDef, ReferencedMemberVarDef, StructTypeDef, EnumTypeDef]]):
         self.struct_name = struct_name
         self.properties = properties
 
@@ -93,21 +128,6 @@ class StructTypeDef:
             "kind": "struct",
             "name": self.struct_name,
             "properties": [e.dict() for e in self.properties]
-        }
-
-    def __str__(self):
-        return json.dumps(self.dict(), indent=4)
-
-
-class RefTypeDef:
-    ref_target_uri: str
-
-    def __init__(self, ref_target_uri: str):
-        self.ref_target_uri = ref_target_uri
-
-    def dict(self):
-        return {
-            "ref_target_uri": self.ref_target_uri
         }
 
     def __str__(self):

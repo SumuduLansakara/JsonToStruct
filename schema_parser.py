@@ -1,6 +1,7 @@
 from typing import List, Union, Dict
 
-from type_defs import MemberVarDef, StructTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, RefTypeDef
+from type_defs import MemberVarDef, StructTypeDef, EnumTypeDef, BasicAliasDef, ArrayAliasDef, RefTypeDef, \
+    ReferencedMemberVarDef
 from type_registry import TypeRegistry, RegKey
 
 
@@ -14,8 +15,9 @@ class SchemaParser:
     def type_registry(self):
         return self._type_registry
 
-    def _get_struct_members(self, struct_reg_key: RegKey, obj_props: Dict) -> List[Union[MemberVarDef, StructTypeDef]]:
-        members: List[Union[MemberVarDef, StructTypeDef, EnumTypeDef]] = []
+    def _get_struct_members(self, struct_reg_key: RegKey, obj_props: Dict[str, Dict]) \
+            -> List[Union[MemberVarDef, StructTypeDef]]:
+        members: List[Union[MemberVarDef, ReferencedMemberVarDef, StructTypeDef, EnumTypeDef]] = []
 
         for mem_name, mem_def in obj_props.items():
             mem_reg_key = struct_reg_key.add_leaf(mem_name)
@@ -30,8 +32,7 @@ class SchemaParser:
                 members.append(m)
 
             if isinstance(td, RefTypeDef):
-                ref_key = RegKey(*td.ref_target_uri.split('/'))
-                m = MemberVarDef(mem_name, self._type_registry.get(ref_key).alias_name)
+                m = ReferencedMemberVarDef(mem_name, td)
                 members.append(m)
 
             if isinstance(td, StructTypeDef):
@@ -69,12 +70,13 @@ class SchemaParser:
 
         if prop_type == 'object':
             arr_mem_type = f"{array_name.capitalize()}_sub"
-
             arr_mem_reg_key = parent_reg_key.adjust_leaf(arr_mem_type)
 
             members = self._get_struct_members(arr_mem_reg_key, item_def['properties'])
             mem_struct_def = StructTypeDef(arr_mem_type, members)
-            self._type_registry.add(arr_mem_reg_key, mem_struct_def)
+
+            self._type_registry.add(arr_mem_reg_key, mem_struct_def)  # add inner member as a sibling type
+
             return mem_struct_def.struct_name
 
     def _create_typedef(self, reg_key: RegKey, prop_name: str, prop_def: Dict) \
@@ -117,5 +119,3 @@ class SchemaParser:
                 print(f"ValueError: {e}")
             except Exception as e:
                 print(f"Error: {e}")
-                if 'Envelop' not in e:
-                    raise
