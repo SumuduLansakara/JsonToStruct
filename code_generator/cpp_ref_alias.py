@@ -1,3 +1,4 @@
+from code_generator.line_buffer import LineBuffer
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_registry import TypeRegistry
@@ -9,7 +10,7 @@ class CppRefAlias:
     def __init__(self, type_def: RefType):
         self.type_def = type_def
 
-    def code(self, type_registry: TypeRegistry) -> str:
+    def write(self, _buffer: LineBuffer, type_registry: TypeRegistry) -> str:
         return f"using {self.type_def.type_name} = {self.target_type(type_registry)};"
 
     def target_type(self, type_registry: TypeRegistry) -> str:

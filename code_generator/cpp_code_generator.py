@@ -1,10 +1,10 @@
 from typing import Dict, List
 
-from code_generator.CppStruct import CppStruct
 from code_generator.cpp_array_alias import CppArrayAlias
 from code_generator.cpp_enum import CppEnum
 from code_generator.cpp_ref_alias import CppRefAlias
 from code_generator.cpp_simple_alias import CppSimpleAlias
+from code_generator.cpp_struct import CppStruct
 from code_generator.line_buffer import LineBuffer
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
@@ -24,6 +24,7 @@ class CodeGenerator:
     def generate_ref_type_alias(self, ref_def: RefType) -> LineBuffer:
         code = LineBuffer(0)
         cpp_alias = CppRefAlias(ref_def)
+        """Virtual type holding reference to a concrete type. Used for late reference resolution"""
         code.append(cpp_alias.code(self._type_registry))
         return code
 
@@ -60,8 +61,8 @@ class CodeGenerator:
         enum_defs: Dict[str, List] = {}
         struct_defs: Dict[str, List] = {}
 
-        for key, type_def in self._type_registry:
-            ns = self._type_registry.get_namespace(key)
+        for type_def in self._type_registry:
+            ns = self._type_registry.get_namespace(type_def.reg_key)
             if isinstance(type_def, SimpleAlias):
                 c = self.generate_basic_type_alias(type_def)
 

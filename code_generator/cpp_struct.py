@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Set
 
 from code_generator.cpp_array_alias import CppArrayAlias
 from code_generator.cpp_enum import CppEnum
@@ -32,26 +32,24 @@ class CppStruct:
     def write(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
         var_buffer = LineBuffer(0)
         type_buffer = LineBuffer(0)
-        for name, type_def in self.type_def.members:
+        for type_def in self.type_def.members:
             if isinstance(type_def, SimpleAlias):
                 cpp_alias = CppSimpleAlias(type_def)
-                var_buffer.append(f"{cpp_alias.actual_type()} {name};")
+                var_buffer.append(f"{cpp_alias.actual_type()} {type_def.type_name};")
             elif isinstance(type_def, ArrayAlias):
                 cpp_array = CppArrayAlias(type_def)
-                var_buffer.append(f"{cpp_array.actual_type(type_registry)} {name};")
+                var_buffer.append(f"{cpp_array.actual_type(type_registry)} {type_def.type_name};")
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
                 cpp_enum.write(type_buffer, type_registry)
-                var_buffer.append(f"{cpp_enum.enum_name()} {name};")
             elif isinstance(type_def, StructType):
                 cpp_struct = CppStruct(type_def)
                 cpp_struct.write(type_buffer, type_registry)
-                var_buffer.append(f"{type_def.type_name} {name};")
             elif isinstance(type_def, RefType):
                 cpp_ref_alias = CppRefAlias(type_def)
-                var_buffer.append(f"{cpp_ref_alias.target_type(type_registry)} {name};")
+                var_buffer.append(f"{cpp_ref_alias.target_type(type_registry)} {type_def.type_name};")
             else:
-                raise TypeError(f"Unsupported struct member type: {name} [{type_def}]")
+                raise TypeError(f"Unsupported struct member type: [{type_def}]")
 
         # write struct
         if self.base_classes:
