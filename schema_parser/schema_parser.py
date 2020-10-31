@@ -28,7 +28,6 @@ class SchemaParser:
                 raise
             except ValueError as e:
                 print(f"ValueError: {e}")
-                raise
             except Exception as e:
                 print(f"Error: {e}")
                 raise

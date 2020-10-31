@@ -1,10 +1,11 @@
 from typing import Set
 
-from code_generator.cpp_array_alias import CppArrayAlias
-from code_generator.cpp_enum import CppEnum
-from code_generator.cpp_ref_alias import CppRefAlias
-from code_generator.cpp_simple_alias import CppSimpleAlias
 from code_generator.line_buffer import LineBuffer
+from code_generator.type_generators.cpp_array_alias import CppArrayAlias
+from code_generator.type_generators.cpp_enum import CppEnum
+from code_generator.type_generators.cpp_ref_alias import CppRefAlias
+from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
+from code_generator.type_generators.cpp_type_base import CppTypeBase
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.ref_type import RefType
@@ -13,12 +14,13 @@ from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_registry import TypeRegistry
 
 
-class CppStruct:
+class CppStruct(CppTypeBase):
     type_def: StructType
     base_classes: Set[str]
     member_methods: Set[str]
 
     def __init__(self, type_def: StructType):
+        super().__init__(type_def)
         self.type_def = type_def
         self.base_classes = set()
         self.member_methods = set()
@@ -29,7 +31,7 @@ class CppStruct:
     def add_member_method(self, method_declaration):
         self.member_methods.add(method_declaration)
 
-    def write(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
+    def write_header(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
         var_buffer = LineBuffer(0)
         type_buffer = LineBuffer(0)
         for type_def in self.type_def.members:
@@ -41,10 +43,10 @@ class CppStruct:
                 var_buffer.append(f"{cpp_array.actual_type(type_registry)} {type_def.type_name};")
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
-                cpp_enum.write(type_buffer, type_registry)
+                cpp_enum.write_header(type_buffer, type_registry)
             elif isinstance(type_def, StructType):
                 cpp_struct = CppStruct(type_def)
-                cpp_struct.write(type_buffer, type_registry)
+                cpp_struct.write_header(type_buffer, type_registry)
             elif isinstance(type_def, RefType):
                 cpp_ref_alias = CppRefAlias(type_def)
                 var_buffer.append(f"{cpp_ref_alias.target_type(type_registry)} {type_def.type_name};")
@@ -77,3 +79,6 @@ class CppStruct:
         buffer.indent_down()
 
         buffer.append('}')
+
+    def write_source(self, buffer: LineBuffer, type_registry: TypeRegistry):
+        pass

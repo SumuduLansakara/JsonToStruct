@@ -1,3 +1,5 @@
+from code_generator.line_buffer import LineBuffer
+from code_generator.type_generators.cpp_type_base import CppTypeBase
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
@@ -24,14 +26,14 @@ def element_type(element_def: TypeDefBase, type_registry: TypeRegistry):
     raise TypeError(f"Unsupported array element type: {element_def}")
 
 
-class CppArrayAlias:
+class CppArrayAlias(CppTypeBase):
     type_def: ArrayAlias
 
-    def __init__(self, type_def: ArrayAlias):
-        self.type_def = type_def
+    def write_header(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
+        buffer.append(f"using {self.type_def.type_name} = {self.actual_type(type_registry)};")
 
-    def code(self, type_registry: TypeRegistry) -> str:
-        return f"using {self.type_def.type_name} = {self.actual_type(type_registry)};"
+    def write_source(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
+        pass
 
     def actual_type(self, type_registry: TypeRegistry):
         return element_type(self.type_def, type_registry)

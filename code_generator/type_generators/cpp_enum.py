@@ -1,15 +1,16 @@
 from code_generator.line_buffer import LineBuffer
+from code_generator.type_generators.cpp_type_base import CppTypeBase
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_registry import TypeRegistry
 
 
-class CppEnum:
+class CppEnum(CppTypeBase):
     type_def: EnumType
 
-    def __init__(self, type_def: EnumType):
-        self.type_def = type_def
+    def enum_name(self) -> str:
+        return self.type_def.type_name
 
-    def write(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
+    def write_header(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
         buffer.append(f"enum class {self.enum_name()}")
         buffer.append('{')
         buffer.indent_up()
@@ -21,5 +22,5 @@ class CppEnum:
         buffer.indent_down()
         buffer.append('}')
 
-    def enum_name(self) -> str:
-        return self.type_def.type_name
+    def write_source(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
+        pass
