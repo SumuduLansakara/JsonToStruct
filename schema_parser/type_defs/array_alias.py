@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, List
 
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.struct_type import StructType
@@ -18,14 +18,18 @@ class ArrayAlias(TypeDefBase):
             return True
         return False
 
-    def parse(self, item_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
-        mem_name = self.type_name + '_sub'
-        mem_reg_key = self.reg_key.parent().add_leaf(mem_name)
-        self.element_type_def = creator_fn(mem_reg_key, mem_name, item_def['items'], type_registry)
+    def parse(self, array_def: Dict, creator_fn: Callable, type_registry: TypeRegistry) -> List[TypeDefBase]:
+        mem_reg_key = self.reg_key.add_leaf('0')
+        item_def = array_def['items']
+        type_defs = creator_fn(mem_reg_key, None, item_def, type_registry)
 
+        assert len(type_defs) == 1
+        self.element_type_def = type_defs[0]
         # if array item has a complex type, that has to be registered as a sibling to array
         if isinstance(self.element_type_def, (StructType, EnumType)):
-            type_registry.add(self.element_type_def)
+            mem_name = item_def['$meta:typename'] if '$meta:typename' in item_def else self.type_name + '_sub'
+            self.element_type_def.type_name = mem_name
+            return type_defs
 
     def dict(self):
         return {

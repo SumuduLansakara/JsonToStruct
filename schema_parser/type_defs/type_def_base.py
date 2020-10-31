@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import json
 from abc import ABC
-from typing import Dict, Callable
+from typing import Dict, Callable, List
 
 from schema_parser.reg_key import RegKey
 
@@ -19,7 +21,7 @@ class TypeDefBase(ABC):
     def is_parsable(array_def: Dict[str, str]) -> bool:
         raise NotImplementedError
 
-    def parse(self, definition: Dict, creator_fn: Callable, type_registry):
+    def parse(self, definition: Dict, creator_fn: Callable, type_registry) -> List[TypeDefBase]:
         raise NotImplementedError
 
     def dict(self):

@@ -20,8 +20,9 @@ class SchemaParser:
         for name, definition in schema_def.items():
             key = RegKey(base_uri, name)
             try:
-                type_def = create_typedef(key, name, definition, self._type_registry)
-                self._type_registry.add(type_def)
+                type_defs = create_typedef(key, name, definition, self._type_registry)
+                for type_def in type_defs:
+                    self._type_registry.add(type_def)
             except KeyError as e:
                 print(f"KeyError: {e}")
                 raise

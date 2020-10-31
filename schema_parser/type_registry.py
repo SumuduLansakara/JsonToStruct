@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, List
 
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.type_def_base import TypeDefBase
