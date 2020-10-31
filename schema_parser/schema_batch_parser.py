@@ -40,6 +40,12 @@ class SchemaBatchParser:
                 schema_def = json.load(j_file)
                 self._parser.parse_root_level('#/definitions', schema_file.namespace, schema_def["definitions"])
 
+        # print('>' * 80)
+        # for e in self.type_registry:
+        #     print('>> ', e[0], flush=True)
+        #     print(e[0], e[1])
+        # print('<' * 80)
+
     def set_dir_offset(self, dir_path: str):
         if not os.path.isdir(dir_path):
             raise FileNotFoundError(f"Schema definition offset directory does not exist [{dir_path}]")

@@ -1,18 +1,23 @@
+from typing import Dict, Callable
+
 from schema_parser.type_defs.type_def_base import TypeDefBase
+from schema_parser.type_registry import TypeRegistry
 
 
 class SimpleAlias(TypeDefBase):
     """Simple type alias"""
-    alias_name: str
     actual_type: str
 
-    def __init__(self, alias_name: str, actual_type: str):
-        self.alias_name = alias_name
-        self.actual_type = actual_type
+    @staticmethod
+    def is_parsable(alias_def: Dict[str, str]) -> bool:
+        return 'type' in alias_def and alias_def['type'] in ['boolean', 'integer', 'number', 'string']
+
+    def parse(self, definition: Dict, creator_fn: Callable, type_registry: TypeRegistry):
+        self.actual_type = definition['type']
 
     def dict(self):
         return {
+            **super().dict(),
             "kind": "type_alias",
-            "alias": self.alias_name,
-            "type": self.actual_type,
+            "actual_type": self.actual_type,
         }

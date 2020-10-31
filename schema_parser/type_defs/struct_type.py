@@ -1,27 +1,33 @@
 from __future__ import annotations
 
-from typing import List, Union
+from typing import List, Dict, Callable, Tuple
 
-from schema_parser.member_defs.array_mem_var import ArrayMemberVar
-from schema_parser.member_defs.basic_mem_var import BasicMemberVar
-from schema_parser.member_defs.inner_enum_member import InnerEnumMember
-from schema_parser.member_defs.inner_struct_member import InnerStructMember
-from schema_parser.member_defs.ref_mem_var import ReferencedMemberVar
 from schema_parser.type_defs.type_def_base import TypeDefBase
+from schema_parser.type_registry import TypeRegistry
 
 
 class StructType(TypeDefBase):
     struct_name: str
-    members: List[Union[BasicMemberVar, ArrayMemberVar, ReferencedMemberVar, InnerStructMember, InnerEnumMember]]
+    members: List[Tuple[str, TypeDefBase]]
 
-    def __init__(self, struct_name: str, properties: List[Union[BasicMemberVar, ArrayMemberVar, ReferencedMemberVar,
-                                                                InnerStructMember, InnerEnumMember]]):
-        self.struct_name = struct_name
-        self.members = properties
+    @staticmethod
+    def is_parsable(struct_def: Dict[str, str]) -> bool:
+        if 'type' in struct_def and struct_def['type'] == 'object':
+            if 'properties' not in struct_def:
+                raise ValueError(f"Struct definition without properties [{struct_def}]")
+            return True
+        return False
+
+    def parse(self, struct_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
+        self.members = []
+        for mem_name, mem_def in struct_def['properties'].items():
+            mem_reg_key = self.reg_key.parent().add_leaf(mem_name)
+            td = creator_fn(mem_reg_key, mem_name, mem_def, type_registry)
+            self.members.append((mem_name, td))
 
     def dict(self):
         return {
+            **super().dict(),
             "kind": "struct",
-            "name": self.struct_name,
-            "members": [e.dict() for e in self.members]
+            "members": [(name, t_def.dict()) for name, t_def in self.members]
         }
