@@ -15,6 +15,3 @@ class CppRefAlias(CppTypeBase):
 
     def write_header(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
         buffer.append(f"using {self.type_def.type_name} = {self.target_type(type_registry)};")
-
-    def write_source(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
-        pass

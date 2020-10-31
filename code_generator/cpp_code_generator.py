@@ -21,10 +21,10 @@ class CodeGenerator:
     def __init__(self, type_registry: TypeRegistry):
         self._type_registry = type_registry
 
-    def generate(self):
+    def generate_headers(self):
         header_lines: List[List] = []
 
-        cpp_typy_map = {
+        cpp_type_map = {
             SimpleAlias: CppSimpleAlias,
             ArrayAlias: CppArrayAlias,
             EnumType: CppEnum,
@@ -34,7 +34,7 @@ class CodeGenerator:
 
         for type_def in self._type_registry:
             code = LineBuffer(0)
-            cpp_type = cpp_typy_map[type(type_def)]
+            cpp_type = cpp_type_map[type(type_def)]
             cpp_type_writer = cpp_type(type_def)
             if cpp_type == CppStruct:
                 cpp_type_writer.add_base_class('ISerializable')
@@ -45,3 +45,20 @@ class CodeGenerator:
 
         for td in header_lines:
             print(td)
+
+    def generate_sources(self):
+        src_lines: List[List] = []
+        for type_def in self._type_registry:
+            if not isinstance(type_def, StructType):
+                continue
+            code = LineBuffer(0)
+            cpp_type_writer = CppStruct(type_def)
+            cpp_type_writer.add_base_class('ISerializable')
+            cpp_type_writer.add_member_method('[[nodiscard]] std::string ToJson() const override;')
+            cpp_type_writer.add_member_method('void FromJson(const std::string&) override;')
+            cpp_type_writer.write_source(code, self._type_registry)
+            src_lines.append(code.str())
+
+        for td in src_lines:
+            print(td)
+

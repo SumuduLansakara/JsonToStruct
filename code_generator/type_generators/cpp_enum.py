@@ -21,6 +21,3 @@ class CppEnum(CppTypeBase):
             buffer.append(f"{enum_members[-1]} = {len(enum_members) - 1}")
         buffer.indent_down()
         buffer.append('}')
-
-    def write_source(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
-        pass

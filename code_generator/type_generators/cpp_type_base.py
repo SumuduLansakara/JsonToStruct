@@ -15,4 +15,4 @@ class CppTypeBase(ABC):
         raise NotImplementedError
 
     def write_source(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
-        raise NotImplementedError
+        pass

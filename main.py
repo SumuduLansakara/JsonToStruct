@@ -11,7 +11,8 @@ def start():
     batch_parser.parse()
 
     code_gen = CodeGenerator(batch_parser.type_registry)
-    code_gen.generate()
+    code_gen.generate_headers()
+    code_gen.generate_sources()
 
 
 if __name__ == '__main__':

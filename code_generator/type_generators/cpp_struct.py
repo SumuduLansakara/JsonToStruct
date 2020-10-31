@@ -14,6 +14,19 @@ from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_registry import TypeRegistry
 
 
+class IndentedBlock:
+    line_buffer: LineBuffer
+
+    def __init__(self, line_buffer: LineBuffer):
+        self.line_buffer = line_buffer
+
+    def __enter__(self):
+        self.line_buffer.indent_up()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.line_buffer.indent_down()
+
+
 class CppStruct(CppTypeBase):
     type_def: StructType
     base_classes: Set[str]
@@ -70,15 +83,46 @@ class CppStruct(CppTypeBase):
             buffer.new_line()
 
         # pre-defined methods
-        buffer.indent_up()
-        if self.member_methods:
-            for method in self.member_methods:
-                buffer.append(method)
-        else:
-            buffer.pop()
-        buffer.indent_down()
+        with IndentedBlock(buffer):
+            if self.member_methods:
+                for method in self.member_methods:
+                    buffer.append(method)
+            else:
+                buffer.pop()
 
         buffer.append('}')
 
     def write_source(self, buffer: LineBuffer, type_registry: TypeRegistry):
-        pass
+        buffer.append(f"namespace foo")
+        buffer.append("{")
+
+        with IndentedBlock(buffer):
+            buffer.append(f"namespace internal")
+            buffer.append("{")
+            with IndentedBlock(buffer):
+                buffer.append(f"std::string ToJson({self.type_def.type_name} const& m)")
+                buffer.append("{")
+                buffer.append("}")
+                buffer.new_line()
+
+                buffer.append(f"void FromJson({self.type_def.type_name} const& m, nlohmann::json const& j)")
+                buffer.append("{")
+                buffer.append("}")
+
+            buffer.append("}")
+            buffer.new_line()
+
+            buffer.append(f"std::string {self.type_def.type_name}::ToJson() const")
+            buffer.append("{")
+            with IndentedBlock(buffer):
+                buffer.append('return internal::ToJson(*this).dump();')
+            buffer.append("}")
+            buffer.new_line()
+
+            buffer.append(f"void {self.type_def.type_name}::FromJson(std::string const& js)")
+            buffer.append("{")
+            with IndentedBlock(buffer):
+                buffer.append('internal::FromJson(*this, nlohmann::parse(js));')
+            buffer.append("}")
+
+        buffer.append("}")
