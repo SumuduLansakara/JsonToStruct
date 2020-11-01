@@ -11,8 +11,8 @@ from schema_parser.type_defs.variant_alias import VariantAlias
 from schema_parser.type_registry import TypeRegistry
 
 
-def create_typedef(reg_key: RegKey, namespaces: List[str], name: str, definition: Dict, type_registry: TypeRegistry) -> \
-List[TypeDefBase]:
+def create_typedef(reg_key: RegKey, namespaces: List[str], name: str, definition: Dict, type_registry: TypeRegistry) \
+        -> List[TypeDefBase]:
     types: [TypeDefBase] = [SimpleAlias, ArrayAlias, VariantAlias, EnumType, StructType, RefType]
     res: List[TypeDefBase] = []
     for Type in types:

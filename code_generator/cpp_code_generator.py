@@ -1,4 +1,5 @@
-from typing import Dict, List
+import os
+from typing import Dict
 
 from code_generator.line_buffer import LineBuffer
 from code_generator.type_generators.cpp_array_alias import CppArrayAlias
@@ -19,13 +20,21 @@ from schema_parser.type_registry import TypeRegistry
 class CodeGenerator:
     _cpp_type_map: Dict[str, str]
     _type_registry: TypeRegistry
+    header_dir: str
+    cpp_dir: str
 
-    def __init__(self, type_registry: TypeRegistry):
+    def get_header_file_path(self, struct_def: StructType) -> str:
+        return os.path.join(self.header_dir, *struct_def.namespaces, struct_def.type_name + '.h')
+
+    def get_cpp_file_path(self, struct_def: StructType) -> str:
+        return os.path.join(self.cpp_dir, *struct_def.namespaces, struct_def.type_name + '.cpp')
+
+    def __init__(self, type_registry: TypeRegistry, header_dir: str, cpp_dir: str):
         self._type_registry = type_registry
+        self.header_dir = header_dir
+        self.cpp_dir = cpp_dir
 
     def generate_headers(self):
-        header_lines: List[List] = []
-
         cpp_type_map = {
             SimpleAlias: CppSimpleAlias,
             ArrayAlias: CppArrayAlias,
@@ -55,31 +64,37 @@ class CodeGenerator:
 
             # prepend include headers
             if cpp_type_meta == CppStruct:
-                if cpp_type.include_headers:
-                    cpp_header_code.prepend('')
-                    for include in cpp_type.include_headers:
-                        cpp_header_code.prepend(f"#include <{include}>")
-                cpp_header_code.prepend('')
-                cpp_header_code.prepend('#pragma once')
+                prepend_lines = ['#pragma once']
+                if cpp_type.header_includes:
+                    prepend_lines.append('')
+                    for include in cpp_type.header_includes:
+                        prepend_lines.append(f"#include <{include}>")
+                prepend_lines.append('')
+                cpp_header_code.prepend(*prepend_lines)
 
-            header_lines.append(cpp_header_code.str())
-
-        for td in header_lines:
-            print(td)
+            print(':: header path: ' + self.get_header_file_path(type_def))
+            print()
+            print(cpp_header_code.str())
 
     def generate_sources(self):
-        src_lines: List[List] = []
         for type_def in self._type_registry:
             if not isinstance(type_def, StructType):
                 continue
 
             cpp_src_code = LineBuffer(0)
-            cpp_type_writer = CppStruct(type_def)
-            cpp_type_writer.add_base_class('ISerializable')
-            cpp_type_writer.add_member_method('[[nodiscard]] std::string ToJson() const override;')
-            cpp_type_writer.add_member_method('void FromJson(const std::string&) override;')
-            cpp_type_writer.write_source(cpp_src_code, self._type_registry)
-            src_lines.append(cpp_src_code.str())
+            cpp_struct = CppStruct(type_def)
+            cpp_struct.add_base_class('ISerializable')
+            cpp_struct.add_member_method('[[nodiscard]] std::string ToJson() const override;')
+            cpp_struct.add_member_method('void FromJson(const std::string&) override;')
+            cpp_struct.write_source(cpp_src_code, self._type_registry)
 
-        for td in src_lines:
-            print(td)
+            # prepend include headers
+            prepend_lines = [f'#include <{self.get_header_file_path(type_def)}>']
+            for include in cpp_struct.cpp_includes:
+                prepend_lines.append(f"#include <{include}>")
+            prepend_lines.append('')
+            cpp_src_code.prepend(*prepend_lines)
+
+            print(':: cpp path: ' + self.get_cpp_file_path(type_def))
+            print()
+            print(cpp_src_code.str())

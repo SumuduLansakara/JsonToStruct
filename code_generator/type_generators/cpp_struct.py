@@ -22,14 +22,16 @@ class CppStruct(CppTypeBase):
     type_def: StructType
     base_classes: Set[str]
     member_methods: Set[str]
-    include_headers: Set[str]
+    header_includes: Set[str]
+    cpp_includes: Set[str]
 
     def __init__(self, type_def: StructType):
         super().__init__(type_def)
         self.type_def = type_def
         self.base_classes = set()
         self.member_methods = set()
-        self.include_headers = set()
+        self.header_includes = set()
+        self.cpp_includes = set()
 
     def add_base_class(self, class_name):
         self.base_classes.add(class_name)
@@ -44,22 +46,22 @@ class CppStruct(CppTypeBase):
             if isinstance(type_def, SimpleAlias):
                 cpp_alias = CppSimpleAlias(type_def)
                 var_buffer.append(f"{cpp_alias.actual_type()} {type_def.type_name};")
-                self.include_headers.update(cpp_alias.get_include_headers(type_registry))
+                self.header_includes.update(cpp_alias.get_include_headers(type_registry))
             elif isinstance(type_def, ArrayAlias):
                 cpp_array = CppArrayAlias(type_def)
                 var_buffer.append(f"{cpp_array.actual_type(type_registry)} {type_def.type_name};")
-                self.include_headers.update(cpp_array.get_include_headers(type_registry))
+                self.header_includes.update(cpp_array.get_include_headers(type_registry))
             elif isinstance(type_def, VariantAlias):
                 cpp_variant = CppVariantAlias(type_def)
                 var_buffer.append(f"{cpp_variant.actual_type(type_registry)} {type_def.type_name};")
-                self.include_headers.update(cpp_variant.get_include_headers(type_registry))
+                self.header_includes.update(cpp_variant.get_include_headers(type_registry))
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
                 cpp_enum.write_header(type_buffer, type_registry)
             elif isinstance(type_def, StructType):
                 cpp_struct = CppStruct(type_def)
                 cpp_struct.write_header(type_buffer, type_registry)
-                self.include_headers.update(cpp_struct.include_headers)
+                self.header_includes.update(cpp_struct.header_includes)
             elif isinstance(type_def, RefType):
                 cpp_ref_alias = CppRefAlias(type_def)
                 var_buffer.append(f"{cpp_ref_alias.target_type(type_registry)} {type_def.type_name};")
