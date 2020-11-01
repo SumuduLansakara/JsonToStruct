@@ -6,11 +6,13 @@ from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
 from code_generator.type_generators.cpp_type_base import CppTypeBase
+from code_generator.type_generators.cpp_variant_alias import CppVariantAlias
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
+from schema_parser.type_defs.variant_alias import VariantAlias
 from schema_parser.type_registry import TypeRegistry
 
 
@@ -41,6 +43,9 @@ class CppStruct(CppTypeBase):
             elif isinstance(type_def, ArrayAlias):
                 cpp_array = CppArrayAlias(type_def)
                 var_buffer.append(f"{cpp_array.actual_type(type_registry)} {type_def.type_name};")
+            elif isinstance(type_def, VariantAlias):
+                cpp_variant = CppVariantAlias(type_def)
+                var_buffer.append(f"{cpp_variant.actual_type(type_registry)} {type_def.type_name};")
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
                 cpp_enum.write_header(type_buffer, type_registry)

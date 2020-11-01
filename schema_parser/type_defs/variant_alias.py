@@ -31,7 +31,7 @@ class VariantAlias(TypeDefBase):
 
             # if member has a complex type, that has to be registered as a sibling to array
             if isinstance(type_defs[0], (StructType, EnumType)):
-                mem_name = mem_t_def['$meta:typename'] if '$meta:typename' in mem_t_def else self.type_name + '_sub'
+                mem_name = mem_t_def['@meta:typename'] if '@meta:typename' in mem_t_def else self.type_name + '_sub'
                 type_defs[0].type_name = mem_name
                 dep_types.append(type_defs[0])
 

@@ -27,7 +27,7 @@ class ArrayAlias(TypeDefBase):
         self.element_type_def = type_defs[0]
         # if array item has a complex type, that has to be registered as a sibling to array
         if isinstance(self.element_type_def, (StructType, EnumType)):
-            mem_name = item_def['$meta:typename'] if '$meta:typename' in item_def else self.type_name + '_sub'
+            mem_name = item_def['@meta:typename'] if '@meta:typename' in item_def else self.type_name + '_sub'
             self.element_type_def.type_name = mem_name
             return type_defs
 

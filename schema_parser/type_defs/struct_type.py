@@ -38,9 +38,9 @@ class StructType(TypeDefBase):
                 # - need special care to prevent name collisions as two members are defined from single definition
                 # -- provided name is given to the member variable
                 # -- if the provided name starts with a lower-case letter, upper cased form is taken as type name.
-                #    Otherwise it typename must have been explicitly provided via '$meta:typename' property
+                #    Otherwise it typename must have been explicitly provided via '@meta:typename' property
                 if isinstance(td, (StructType, EnumType)):
-                    mem_type_name = mem_def['$meta:typename'] if '$meta:typename' in mem_def \
+                    mem_type_name = mem_def['@meta:typename'] if '@meta:typename' in mem_def \
                         else mem_name[0].upper() + mem_name[1:]
                     if mem_name == mem_type_name:
                         raise NameError(f"Unable to deduce a non colliding name for inner type of struct: "

@@ -1,4 +1,5 @@
 from code_generator.line_buffer import LineBuffer
+from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
 from code_generator.type_generators.cpp_type_base import CppTypeBase
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.array_alias import ArrayAlias
@@ -13,11 +14,13 @@ from schema_parser.type_registry import TypeRegistry
 class CppArrayAlias(CppTypeBase):
     type_def: ArrayAlias
 
-    def _element_type(self, element_def: TypeDefBase, type_registry: TypeRegistry) -> str:
+    @classmethod
+    def element_type(cls, element_def: TypeDefBase, type_registry: TypeRegistry) -> str:
         if isinstance(element_def, SimpleAlias):
-            return element_def.actual_type
+            cpp_alias = CppSimpleAlias(element_def)
+            return cpp_alias.actual_type()
         if isinstance(element_def, ArrayAlias):
-            return f"std::vector<{self._element_type(element_def.element_type_def, type_registry)}>"
+            return f"std::vector<{cls.element_type(element_def.element_type_def, type_registry)}>"
         if isinstance(element_def, StructType):
             return element_def.type_name
         if isinstance(element_def, EnumType):
@@ -32,4 +35,4 @@ class CppArrayAlias(CppTypeBase):
         buffer.append(f"using {self.type_def.type_name} = {self.actual_type(type_registry)};")
 
     def actual_type(self, type_registry: TypeRegistry) -> str:
-        return self._element_type(self.type_def, type_registry)
+        return self.element_type(self.type_def, type_registry)
