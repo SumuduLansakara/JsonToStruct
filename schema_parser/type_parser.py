@@ -7,11 +7,12 @@ from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_defs.type_def_base import TypeDefBase
+from schema_parser.type_defs.variant_alias import VariantAlias
 from schema_parser.type_registry import TypeRegistry
 
 
 def create_typedef(reg_key: RegKey, name: str, definition: Dict, type_registry: TypeRegistry) -> List[TypeDefBase]:
-    types: [TypeDefBase] = [SimpleAlias, ArrayAlias, EnumType, StructType, RefType]
+    types: [TypeDefBase] = [SimpleAlias, ArrayAlias, VariantAlias, EnumType, StructType, RefType]
     res: List[TypeDefBase] = []
     for Type in types:
         if Type.is_parsable(definition):

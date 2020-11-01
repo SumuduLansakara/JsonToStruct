@@ -48,7 +48,7 @@ def generate_property(name: str, prop_def: dict) -> dict:
         raise NotImplementedError("references are not yet supported")
 
     if prop_def["type"] == "object":
-        obj_type = name.capitalize()
+        obj_type = name[0].upper() + name[1:]
         struct_cache[obj_type] = generate_object(prop_def)
         return {
             "name": name,

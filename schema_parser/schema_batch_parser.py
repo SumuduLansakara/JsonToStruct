@@ -37,7 +37,11 @@ class SchemaBatchParser:
     def parse(self):
         for schema_file in self._build_order:
             with open(self._get_abs_path(schema_file)) as j_file:
-                schema_def = json.load(j_file)
+                try:
+                    schema_def = json.load(j_file)
+                except:
+                    print(f"failed loading file: {schema_file.file_path}", flush=True)
+                    raise
                 self._parser.parse_root_level('#/definitions', schema_file.namespace, schema_def["definitions"])
 
         # print('>' * 80)

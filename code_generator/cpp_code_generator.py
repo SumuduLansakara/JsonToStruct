@@ -6,11 +6,13 @@ from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
 from code_generator.type_generators.cpp_struct import CppStruct
+from code_generator.type_generators.cpp_variant_alias import CppVariantAlias
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
+from schema_parser.type_defs.variant_alias import VariantAlias
 from schema_parser.type_registry import TypeRegistry
 
 
@@ -27,6 +29,7 @@ class CodeGenerator:
         cpp_type_map = {
             SimpleAlias: CppSimpleAlias,
             ArrayAlias: CppArrayAlias,
+            VariantAlias: CppVariantAlias,
             EnumType: CppEnum,
             StructType: CppStruct,
             RefType: CppRefAlias,
@@ -34,6 +37,8 @@ class CodeGenerator:
 
         for type_def in self._type_registry:
             code = LineBuffer(0)
+            if type(type_def) not in cpp_type_map:
+                raise TypeError(f"No supporting cpp type: {type_def}")
             cpp_type = cpp_type_map[type(type_def)]
             cpp_type_writer = cpp_type(type_def)
             if cpp_type == CppStruct:
@@ -61,4 +66,3 @@ class CodeGenerator:
 
         for td in src_lines:
             print(td)
-

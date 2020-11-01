@@ -1,6 +1,6 @@
 from typing import Set
 
-from code_generator.line_buffer import LineBuffer
+from code_generator.line_buffer import LineBuffer, IndentedBlock
 from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
@@ -12,19 +12,6 @@ from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_registry import TypeRegistry
-
-
-class IndentedBlock:
-    line_buffer: LineBuffer
-
-    def __init__(self, line_buffer: LineBuffer):
-        self.line_buffer = line_buffer
-
-    def __enter__(self):
-        self.line_buffer.indent_up()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.line_buffer.indent_down()
 
 
 class CppStruct(CppTypeBase):
@@ -75,11 +62,13 @@ class CppStruct(CppTypeBase):
         buffer.append("{")
 
         if type_buffer:
-            buffer.append(type_buffer.str(1))
+            with IndentedBlock(buffer):
+                buffer.append_buffer(type_buffer)
             buffer.new_line()
 
         if var_buffer:
-            buffer.append(var_buffer.str(1))
+            with IndentedBlock(buffer):
+                buffer.append_buffer(var_buffer)
             buffer.new_line()
 
         # pre-defined methods
@@ -100,7 +89,7 @@ class CppStruct(CppTypeBase):
             buffer.append(f"namespace internal")
             buffer.append("{")
             with IndentedBlock(buffer):
-                buffer.append(f"std::string ToJson({self.type_def.type_name} const& m)")
+                buffer.append(f"nlohmann::json ToJson({self.type_def.type_name} const& m)")
                 buffer.append("{")
                 buffer.append("}")
                 buffer.new_line()
@@ -122,7 +111,7 @@ class CppStruct(CppTypeBase):
             buffer.append(f"void {self.type_def.type_name}::FromJson(std::string const& js)")
             buffer.append("{")
             with IndentedBlock(buffer):
-                buffer.append('internal::FromJson(*this, nlohmann::parse(js));')
+                buffer.append('internal::FromJson(*this, nlohmann::json::parse(js));')
             buffer.append("}")
 
         buffer.append("}")

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List
 
 UNIT_INDENT = ' ' * 4
@@ -38,6 +40,9 @@ class LineBuffer:
     def append(self, line: str):
         self._lines.append(self._prefix + line)
 
+    def append_buffer(self, buffer: LineBuffer):
+        self._lines.extend([self._prefix + line for line in buffer._lines])
+
     def pop(self):
         self._lines.pop()
 
@@ -50,3 +55,16 @@ class LineBuffer:
 
     def __len__(self):
         return len(self._lines)
+
+
+class IndentedBlock:
+    line_buffer: LineBuffer
+
+    def __init__(self, line_buffer: LineBuffer):
+        self.line_buffer = line_buffer
+
+    def __enter__(self):
+        self.line_buffer.indent_up()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.line_buffer.indent_down()

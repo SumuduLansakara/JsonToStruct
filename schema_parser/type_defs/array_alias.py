@@ -22,8 +22,8 @@ class ArrayAlias(TypeDefBase):
         mem_reg_key = self.reg_key.add_leaf('0')
         item_def = array_def['items']
         type_defs = creator_fn(mem_reg_key, None, item_def, type_registry)
+        assert len(type_defs) == 1  # TODO: can return many dependent types (e.g. inner array, variant)
 
-        assert len(type_defs) == 1
         self.element_type_def = type_defs[0]
         # if array item has a complex type, that has to be registered as a sibling to array
         if isinstance(self.element_type_def, (StructType, EnumType)):
