@@ -22,6 +22,14 @@ class StructType(TypeDefBase):
     def parse(self, struct_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.members = []
         for mem_name, mem_def in struct_def['properties'].items():
+            # handle special attributes
+            if mem_name == "additionalProperties":
+                if mem_def is False and len(struct_def["properties"]) != 1:
+                    raise ValueError("Struct marked as 'additionalProperties=false' has properties")
+                if mem_def is True and len(struct_def["properties"]) == 1:
+                    raise ValueError("Struct marked as 'additionalProperties=true' has no properties")
+                continue
+
             mem_reg_key = self.reg_key.parent().add_leaf(mem_name)
             tds = creator_fn(mem_reg_key, mem_name, mem_def, type_registry)
 

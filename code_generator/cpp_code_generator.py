@@ -45,7 +45,11 @@ class CodeGenerator:
                 cpp_type_writer.add_base_class('ISerializable')
                 cpp_type_writer.add_member_method('[[nodiscard]] std::string ToJson() const override;')
                 cpp_type_writer.add_member_method('void FromJson(const std::string&) override;')
-            cpp_type_writer.write_header(code, self._type_registry)
+
+            try:
+                cpp_type_writer.write_header(code, self._type_registry)
+            except Exception as ex:
+                print(f"Failed writing header: {type_def.type_name} [{ex}]")
             header_lines.append(code.str())
 
         for td in header_lines:

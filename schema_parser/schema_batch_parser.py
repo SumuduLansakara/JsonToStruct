@@ -42,7 +42,10 @@ class SchemaBatchParser:
                 except:
                     print(f"failed loading file: {schema_file.file_path}", flush=True)
                     raise
-                self._parser.parse_root_level('#/definitions', schema_file.namespace, schema_def["definitions"])
+                try:
+                    self._parser.parse_root_level('#/definitions', schema_file.namespace, schema_def["definitions"])
+                except Exception as ex:
+                    print(f"Failed parsing schema file [{schema_file.file_path}]")
 
         # print('>' * 80)
         # for e in self.type_registry:

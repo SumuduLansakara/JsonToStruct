@@ -24,10 +24,11 @@ class SchemaParser:
                 for type_def in type_defs:
                     self._type_registry.add(type_def)
             except KeyError as e:
-                print(f"KeyError: {e}")
+                print(f"KeyError in parsing schema: {name} [{e}]")
                 raise
             except ValueError as e:
-                print(f"ValueError: {e}")
+                print(f"Value error in parsing schema: {name} [{e}]")
+                raise
             except Exception as e:
-                print(f"Error: {e}")
+                print(f"Error in parsing schema: {name} [{e}]")
                 raise
