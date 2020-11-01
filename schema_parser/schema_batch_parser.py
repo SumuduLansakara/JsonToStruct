@@ -7,11 +7,11 @@ from schema_parser.schema_parser import SchemaParser
 
 class SchemaFile:
     file_path: str
-    namespace: str
+    namespaces: List[str]
 
-    def __init__(self, file_path: str, namespace: str):
+    def __init__(self, file_path: str, namespaces: List[str]):
         self.file_path = file_path
-        self.namespace = namespace
+        self.namespaces = namespaces
 
 
 class SchemaBatchParser:
@@ -28,8 +28,8 @@ class SchemaBatchParser:
     def type_registry(self):
         return self._parser.type_registry
 
-    def add_schema_file(self, file_path: str, namespace: str):
-        self._build_order.append(SchemaFile(file_path, namespace))
+    def add_schema_file(self, file_path: str, namespaces: List[str]):
+        self._build_order.append(SchemaFile(file_path, namespaces))
 
     def _get_abs_path(self, schema_file: SchemaFile) -> str:
         return os.path.join(self._file_directory_offset, schema_file.file_path)
@@ -43,9 +43,10 @@ class SchemaBatchParser:
                     print(f"failed loading file: {schema_file.file_path}", flush=True)
                     raise
                 try:
-                    self._parser.parse_root_level('#/definitions', schema_file.namespace, schema_def["definitions"])
+                    self._parser.parse_root_level('#/definitions', schema_file.namespaces, schema_def["definitions"])
                 except Exception as ex:
                     print(f"Failed parsing schema file [{schema_file.file_path}]")
+                    raise
 
         # print('>' * 80)
         # for e in self.type_registry:

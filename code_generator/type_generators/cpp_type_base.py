@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import List
 
 from code_generator.line_buffer import LineBuffer
 from schema_parser.type_defs.type_def_base import TypeDefBase
@@ -16,3 +17,6 @@ class CppTypeBase(ABC):
 
     def write_source(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
         pass
+
+    def get_include_headers(self, _type_registry: TypeRegistry) -> List[str]:
+        return []

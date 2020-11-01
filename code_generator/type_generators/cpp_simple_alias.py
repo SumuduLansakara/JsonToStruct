@@ -27,4 +27,7 @@ class CppSimpleAlias(CppTypeBase):
         return self.get_cpp_type(self.type_def.actual_type)
 
     def write_header(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
-        buffer.append(f"using {self.type_def.type_name} = {self.actual_type()};")
+        buffer.append(f"using {self.type_name()} = {self.actual_type()};")
+
+    def get_include_headers(self, _type_registry: TypeRegistry):
+        return ["string"]

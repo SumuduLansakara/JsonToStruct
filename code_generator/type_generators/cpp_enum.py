@@ -19,4 +19,4 @@ class CppEnum(CppTypeBase):
                 for i, m in enumerate(enum_members[:-1]):
                     buffer.append(f"{m} = {i},")
                 buffer.append(f"{enum_members[-1]} = {len(enum_members) - 1}")
-        buffer.append('}')
+        buffer.append('};')

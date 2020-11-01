@@ -13,3 +13,6 @@ class CppArrayAlias(CppTypeBase):
 
     def actual_type(self, type_registry: TypeRegistry) -> str:
         return array_element_type(self.type_def, type_registry)
+
+    def get_include_headers(self, _type_registry: TypeRegistry):
+        return ["vector"]

@@ -5,6 +5,8 @@ from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
+from code_generator.type_generators.cpp_struct_utils.from_json_generator import write_from_json_body
+from code_generator.type_generators.cpp_struct_utils.to_json_generator import write_to_json_body
 from code_generator.type_generators.cpp_type_base import CppTypeBase
 from code_generator.type_generators.cpp_variant_alias import CppVariantAlias
 from schema_parser.type_defs.array_alias import ArrayAlias
@@ -20,12 +22,14 @@ class CppStruct(CppTypeBase):
     type_def: StructType
     base_classes: Set[str]
     member_methods: Set[str]
+    include_headers: Set[str]
 
     def __init__(self, type_def: StructType):
         super().__init__(type_def)
         self.type_def = type_def
         self.base_classes = set()
         self.member_methods = set()
+        self.include_headers = set()
 
     def add_base_class(self, class_name):
         self.base_classes.add(class_name)
@@ -40,25 +44,34 @@ class CppStruct(CppTypeBase):
             if isinstance(type_def, SimpleAlias):
                 cpp_alias = CppSimpleAlias(type_def)
                 var_buffer.append(f"{cpp_alias.actual_type()} {type_def.type_name};")
+                self.include_headers.update(cpp_alias.get_include_headers(type_registry))
             elif isinstance(type_def, ArrayAlias):
                 cpp_array = CppArrayAlias(type_def)
                 var_buffer.append(f"{cpp_array.actual_type(type_registry)} {type_def.type_name};")
+                self.include_headers.update(cpp_array.get_include_headers(type_registry))
             elif isinstance(type_def, VariantAlias):
                 cpp_variant = CppVariantAlias(type_def)
                 var_buffer.append(f"{cpp_variant.actual_type(type_registry)} {type_def.type_name};")
+                self.include_headers.update(cpp_variant.get_include_headers(type_registry))
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
                 cpp_enum.write_header(type_buffer, type_registry)
             elif isinstance(type_def, StructType):
                 cpp_struct = CppStruct(type_def)
                 cpp_struct.write_header(type_buffer, type_registry)
+                self.include_headers.update(cpp_struct.include_headers)
             elif isinstance(type_def, RefType):
                 cpp_ref_alias = CppRefAlias(type_def)
                 var_buffer.append(f"{cpp_ref_alias.target_type(type_registry)} {type_def.type_name};")
             else:
                 raise TypeError(f"Unsupported struct member type: [{type_def}]")
 
-        # write struct
+        # generate struct
+        if self.type_def.namespaces:
+            buffer.append('namespace ' + '::'.join(self.type_def.namespaces))
+            buffer.append('{')
+            buffer.indent_up()
+
         if self.base_classes:
             suffix = ' : ' + ', '.join(self.base_classes)
         else:
@@ -84,39 +97,55 @@ class CppStruct(CppTypeBase):
             else:
                 buffer.pop()
 
-        buffer.append('}')
+        buffer.append('};')
+        if self.type_def.namespaces:
+            buffer.indent_down()
+            buffer.append('}  // namespace ' + '::'.join(self.type_def.namespaces))
 
     def write_source(self, buffer: LineBuffer, type_registry: TypeRegistry):
-        buffer.append(f"namespace foo")
+        if self.type_def.namespaces:
+            buffer.append('namespace ' + '::'.join(self.type_def.namespaces))
+            buffer.append('{')
+            buffer.indent_up()
+
+        # internal namespace
+        buffer.append(f"namespace internal")
         buffer.append("{")
-
         with IndentedBlock(buffer):
-            buffer.append(f"namespace internal")
+            # internal ToJson
+            buffer.append(f"nlohmann::json ToJson({self.type_def.type_name} const& m)")
             buffer.append("{")
             with IndentedBlock(buffer):
-                buffer.append(f"nlohmann::json ToJson({self.type_def.type_name} const& m)")
-                buffer.append("{")
-                buffer.append("}")
-                buffer.new_line()
-
-                buffer.append(f"void FromJson({self.type_def.type_name} const& m, nlohmann::json const& j)")
-                buffer.append("{")
-                buffer.append("}")
-
+                write_to_json_body(buffer, type_registry, self.type_def.members)
             buffer.append("}")
             buffer.new_line()
 
-            buffer.append(f"std::string {self.type_def.type_name}::ToJson() const")
+            # internal FromJson
+            buffer.append(f"void FromJson({self.type_def.type_name}& m, nlohmann::json const& j)")
             buffer.append("{")
             with IndentedBlock(buffer):
-                buffer.append('return internal::ToJson(*this).dump();')
+                write_from_json_body(buffer, type_registry, self.type_def.members)
             buffer.append("}")
-            buffer.new_line()
+        buffer.append("}")
+        buffer.new_line()
 
-            buffer.append(f"void {self.type_def.type_name}::FromJson(std::string const& js)")
-            buffer.append("{")
-            with IndentedBlock(buffer):
-                buffer.append('internal::FromJson(*this, nlohmann::json::parse(js));')
-            buffer.append("}")
+        # public ToJson
+        buffer.append(f"std::string {self.type_def.type_name}::ToJson() const")
+        buffer.append("{")
+        with IndentedBlock(buffer):
+            buffer.append('return internal::ToJson(*this).dump();')
+        buffer.append("}")
+        buffer.new_line()
+
+        # public FromJson
+        buffer.append(f"void {self.type_def.type_name}::FromJson(std::string const& js)")
+        buffer.append("{")
+        with IndentedBlock(buffer):
+            buffer.append('internal::FromJson(*this, nlohmann::json::parse(js));')
+        buffer.append("}")
 
         buffer.append("}")
+
+        if self.type_def.namespaces:
+            buffer.indent_down()
+            buffer.append('}  // namespace ' + '::'.join(self.type_def.namespaces))

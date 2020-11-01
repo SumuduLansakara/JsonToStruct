@@ -36,21 +36,30 @@ class CodeGenerator:
         }
 
         for type_def in self._type_registry:
-            code = LineBuffer(0)
             if type(type_def) not in cpp_type_map:
                 raise TypeError(f"No supporting cpp type: {type_def}")
-            cpp_type = cpp_type_map[type(type_def)]
-            cpp_type_writer = cpp_type(type_def)
-            if cpp_type == CppStruct:
-                cpp_type_writer.add_base_class('ISerializable')
-                cpp_type_writer.add_member_method('[[nodiscard]] std::string ToJson() const override;')
-                cpp_type_writer.add_member_method('void FromJson(const std::string&) override;')
+
+            cpp_type_meta = cpp_type_map[type(type_def)]
+            cpp_type = cpp_type_meta(type_def)
+
+            cpp_header_code = LineBuffer(0)
+            if cpp_type_meta == CppStruct:
+                cpp_type.add_base_class('ISerializable')
+                cpp_type.add_member_method('[[nodiscard]] std::string ToJson() const override;')
+                cpp_type.add_member_method('void FromJson(const std::string&) override;')
 
             try:
-                cpp_type_writer.write_header(code, self._type_registry)
+                cpp_type.write_header(cpp_header_code, self._type_registry)
             except Exception as ex:
                 print(f"Failed writing header: {type_def.type_name} [{ex}]")
-            header_lines.append(code.str())
+
+            # prepend include headers
+            if cpp_type_meta == CppStruct:
+                cpp_header_code.prepend('')
+                for include in cpp_type.include_headers:
+                    cpp_header_code.prepend(f"#include <{include}>")
+
+            header_lines.append(cpp_header_code.str())
 
         for td in header_lines:
             print(td)
@@ -60,13 +69,14 @@ class CodeGenerator:
         for type_def in self._type_registry:
             if not isinstance(type_def, StructType):
                 continue
-            code = LineBuffer(0)
+
+            cpp_src_code = LineBuffer(0)
             cpp_type_writer = CppStruct(type_def)
             cpp_type_writer.add_base_class('ISerializable')
             cpp_type_writer.add_member_method('[[nodiscard]] std::string ToJson() const override;')
             cpp_type_writer.add_member_method('void FromJson(const std::string&) override;')
-            cpp_type_writer.write_source(code, self._type_registry)
-            src_lines.append(code.str())
+            cpp_type_writer.write_source(cpp_src_code, self._type_registry)
+            src_lines.append(cpp_src_code.str())
 
         for td in src_lines:
             print(td)

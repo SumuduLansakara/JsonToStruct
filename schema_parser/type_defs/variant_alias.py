@@ -24,7 +24,7 @@ class VariantAlias(TypeDefBase):
 
         for i, mem_t_def in enumerate(variant_def['oneOf']):
             mem_reg_key = self.reg_key.add_leaf(str(i))
-            type_defs = creator_fn(mem_reg_key, None, mem_t_def, type_registry)
+            type_defs = creator_fn(mem_reg_key, self.namespaces, None, mem_t_def, type_registry)
             assert len(type_defs) == 1  # TODO: can return many dependent types (e.g. inner array, variant)
 
             self.member_type_defs.append(type_defs[0])

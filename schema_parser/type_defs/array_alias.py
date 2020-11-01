@@ -21,7 +21,7 @@ class ArrayAlias(TypeDefBase):
     def parse(self, array_def: Dict, creator_fn: Callable, type_registry: TypeRegistry) -> List[TypeDefBase]:
         mem_reg_key = self.reg_key.add_leaf('0')
         item_def = array_def['items']
-        type_defs = creator_fn(mem_reg_key, None, item_def, type_registry)
+        type_defs = creator_fn(mem_reg_key, self.namespaces, None, item_def, type_registry)
         assert len(type_defs) == 1  # TODO: can return many dependent types (e.g. inner array, variant)
 
         self.element_type_def = type_defs[0]

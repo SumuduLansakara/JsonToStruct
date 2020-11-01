@@ -31,7 +31,7 @@ class StructType(TypeDefBase):
                 continue
 
             mem_reg_key = self.reg_key.parent().add_leaf(mem_name)
-            tds = creator_fn(mem_reg_key, mem_name, mem_def, type_registry)
+            tds = creator_fn(mem_reg_key, [], mem_name, mem_def, type_registry)
 
             if len(tds) > 1:
                 # if more than one member is created, that must be an array with complex inner types
@@ -40,6 +40,7 @@ class StructType(TypeDefBase):
                         type_registry.add(td, True)
                     self.members.append(td)
             else:
+                assert len(tds) == 1
                 td = tds[0]
                 # if a single complex inner type is created, it must be a struct or an enum.
                 # - a member variable must be created from that type
@@ -60,7 +61,7 @@ class StructType(TypeDefBase):
 
                     # add a member variable of complex type ?
                     inner_member_ref_key = self.reg_key.parent().add_leaf(mem_name + '_var')
-                    inner_member_ref = RefType(mem_name, inner_member_ref_key)
+                    inner_member_ref = RefType([], mem_name, inner_member_ref_key)
                     inner_member_ref.target_uri = str(td.reg_key)
                     self.members.append(inner_member_ref)
                 else:

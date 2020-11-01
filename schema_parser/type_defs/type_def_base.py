@@ -9,11 +9,12 @@ from schema_parser.reg_key import RegKey
 
 class TypeDefBase(ABC):
     """Base class for all type definition classes"""
-
+    namespaces: List[str]
     type_name: str
     reg_key: RegKey
 
-    def __init__(self, type_name: str, reg_key: RegKey):
+    def __init__(self, namespaces: List[str], type_name: str, reg_key: RegKey):
+        self.namespaces = namespaces
         self.type_name = type_name
         self.reg_key = reg_key
 
