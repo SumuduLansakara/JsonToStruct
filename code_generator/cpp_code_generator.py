@@ -55,9 +55,12 @@ class CodeGenerator:
 
             # prepend include headers
             if cpp_type_meta == CppStruct:
+                if cpp_type.include_headers:
+                    cpp_header_code.prepend('')
+                    for include in cpp_type.include_headers:
+                        cpp_header_code.prepend(f"#include <{include}>")
                 cpp_header_code.prepend('')
-                for include in cpp_type.include_headers:
-                    cpp_header_code.prepend(f"#include <{include}>")
+                cpp_header_code.prepend('#pragma once')
 
             header_lines.append(cpp_header_code.str())
 
