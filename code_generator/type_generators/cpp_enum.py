@@ -17,5 +17,6 @@ class CppEnum(CppTypeBase):
             if self.type_def.members:
                 enum_members = self.type_def.members
                 for m, i in enum_members.items():
-                    buffer.append(f"{m} = {i},")
+                    comment = f"  //{self.type_def.comments[m]}" if m in self.type_def.comments else ''
+                    buffer.append(f"{m} = {i},{comment}")
         buffer.append('};')
