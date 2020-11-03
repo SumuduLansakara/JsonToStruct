@@ -3,6 +3,7 @@ from typing import Dict, List
 from schema_parser.reg_key import RegKey
 from schema_parser.type_parser import create_typedef
 from schema_parser.type_registry import TypeRegistry
+from schema_parser.utils import attribute_reader
 
 
 class SchemaParser:
@@ -15,8 +16,14 @@ class SchemaParser:
     def type_registry(self):
         return self._type_registry
 
-    def parse_root_level(self, base_uri: str, namespaces: List[str], schema_def: Dict):
+    def parse_root_level(self, base_uri: str, namespaces: List[str], schema_def: Dict[str, Dict]):
         for name, definition in schema_def.items():
+            if attribute_reader.is_custom_attr(name):
+                continue
+
+            if attribute_reader.is_ignored_definition(definition):
+                continue
+
             key = RegKey(base_uri, name)
             try:
                 type_defs = create_typedef(key, namespaces, name, definition, self._type_registry)

@@ -18,10 +18,6 @@ class TypeDefBase(ABC):
         self.type_name = type_name
         self.reg_key = reg_key
 
-    @staticmethod
-    def is_parsable(array_def: Dict[str, str]) -> bool:
-        raise NotImplementedError
-
     def parse(self, definition: Dict, creator_fn: Callable, type_registry) -> List[TypeDefBase]:
         raise NotImplementedError
 

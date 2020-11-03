@@ -2,26 +2,28 @@ from __future__ import annotations
 
 from typing import List, Dict, Callable
 
+from schema_parser import configs
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.type_def_base import TypeDefBase
 from schema_parser.type_registry import TypeRegistry
+from schema_parser.utils import attribute_reader
+from schema_parser.utils.attribute_reader import read_custom_attrib
 
 
 class StructType(TypeDefBase):
     members: List[TypeDefBase]
 
-    @staticmethod
-    def is_parsable(struct_def: Dict[str, str]) -> bool:
-        if 'type' in struct_def and struct_def['type'] == 'object':
-            if 'properties' not in struct_def:
-                raise ValueError(f"Struct definition without properties [{struct_def}]")
-            return True
-        return False
-
     def parse(self, struct_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.members = []
         for mem_name, mem_def in struct_def['properties'].items():
+            if attribute_reader.is_custom_attr(mem_name):
+                assert mem_name == configs.CUSTOM_ATTR_PREFIX + 'comment'
+                continue
+
+            if mem_name == 'optional':  # TODO
+                continue
+
             # handle special attributes
             if mem_name == "additionalProperties":
                 if mem_def is False and len(struct_def["properties"]) != 1:
@@ -47,10 +49,9 @@ class StructType(TypeDefBase):
                 # - need special care to prevent name collisions as two members are defined from single definition
                 # -- provided name is given to the member variable
                 # -- if the provided name starts with a lower-case letter, upper cased form is taken as type name.
-                #    Otherwise it typename must have been explicitly provided via '@meta:typename' property
+                #    Otherwise it typename must have been explicitly provided via custom attribute 'typename'
                 if isinstance(td, (StructType, EnumType)):
-                    mem_type_name = mem_def['@meta:typename'] if '@meta:typename' in mem_def \
-                        else mem_name[0].upper() + mem_name[1:]
+                    mem_type_name = read_custom_attrib(mem_def, 'typename', mem_name[0].upper() + mem_name[1:])
                     if mem_name == mem_type_name:
                         raise NameError(f"Unable to deduce a non colliding name for inner type of struct: "
                                         f"{self.type_name} [{mem_type_name}]")

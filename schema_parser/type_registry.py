@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict
 
 from schema_parser.reg_key import RegKey
+from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.type_def_base import TypeDefBase
 
 
@@ -31,3 +32,9 @@ class TypeRegistry:
         if key not in self._type_registry:
             raise KeyError(f"No such key: {key}")
         return self._type_registry[key].type_def
+
+    def get_ref_target(self, target_uri: str) -> TypeDefBase:
+        next_target = self.get(RegKey.from_uri(target_uri))
+        while isinstance(next_target, RefType):
+            next_target = self.get(RegKey.from_uri(next_target.target_uri))
+        return next_target

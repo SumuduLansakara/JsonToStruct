@@ -8,10 +8,6 @@ class SimpleAlias(TypeDefBase):
     """Simple type alias"""
     actual_type: str
 
-    @staticmethod
-    def is_parsable(alias_def: Dict[str, str]) -> bool:
-        return 'type' in alias_def and alias_def['type'] in ['boolean', 'integer', 'number', 'string']
-
     def parse(self, definition: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.actual_type = definition['type']
 
