@@ -5,8 +5,8 @@ from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
-from code_generator.type_generators.cpp_struct_utils.from_json_generator import write_from_json_body
-from code_generator.type_generators.cpp_struct_utils.to_json_generator import write_to_json_body
+from code_generator.type_generators.cpp_struct_utils.from_json_generator import FromJsonWriter
+from code_generator.type_generators.cpp_struct_utils.to_json_generator import ToJsonWriter
 from code_generator.type_generators.cpp_type_base import CppTypeBase
 from code_generator.type_generators.cpp_variant_alias import CppVariantAlias
 from schema_parser.type_defs.array_alias import ArrayAlias
@@ -58,9 +58,11 @@ class CppStruct(CppTypeBase):
             elif isinstance(type_def, EnumType):
                 cpp_enum = CppEnum(type_def)
                 cpp_enum.write_header(type_buffer, type_registry)
+                type_buffer.new_line()
             elif isinstance(type_def, StructType):
                 cpp_struct = CppStruct(type_def)
                 cpp_struct.write_header(type_buffer, type_registry)
+                type_buffer.new_line()
                 self.header_includes.update(cpp_struct.header_includes)
             elif isinstance(type_def, RefType):
                 cpp_ref_alias = CppRefAlias(type_def)
@@ -84,7 +86,6 @@ class CppStruct(CppTypeBase):
         if type_buffer:
             with IndentedBlock(buffer):
                 buffer.append_buffer(type_buffer)
-            buffer.new_line()
 
         if var_buffer:
             with IndentedBlock(buffer):
@@ -115,19 +116,13 @@ class CppStruct(CppTypeBase):
         buffer.append("{")
         with IndentedBlock(buffer):
             # internal ToJson
-            buffer.append(f"nlohmann::json ToJson({self.type_def.type_name} const& m)")
-            buffer.append("{")
-            with IndentedBlock(buffer):
-                write_to_json_body(buffer, type_registry, self.type_def.members)
-            buffer.append("}")
-            buffer.new_line()
+            tjw = ToJsonWriter(buffer, type_registry, self.type_def)
+            tjw.write_function()
 
             # internal FromJson
-            buffer.append(f"void FromJson({self.type_def.type_name}& m, nlohmann::json const& j)")
-            buffer.append("{")
-            with IndentedBlock(buffer):
-                write_from_json_body(buffer, type_registry, self.type_def.members)
-            buffer.append("}")
+            fjw = FromJsonWriter(buffer, type_registry, self.type_def)
+            fjw.write_function()
+
         buffer.append("}")
         buffer.new_line()
 
@@ -144,8 +139,6 @@ class CppStruct(CppTypeBase):
         buffer.append("{")
         with IndentedBlock(buffer):
             buffer.append('internal::FromJson(*this, nlohmann::json::parse(js));')
-        buffer.append("}")
-
         buffer.append("}")
 
         if self.type_def.namespaces:

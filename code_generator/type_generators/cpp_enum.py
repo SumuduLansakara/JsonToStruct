@@ -16,7 +16,6 @@ class CppEnum(CppTypeBase):
         with IndentedBlock(buffer):
             if self.type_def.members:
                 enum_members = self.type_def.members
-                for i, m in enumerate(enum_members[:-1]):
+                for m, i in enum_members.items():
                     buffer.append(f"{m} = {i},")
-                buffer.append(f"{enum_members[-1]} = {len(enum_members) - 1}")
         buffer.append('};')
