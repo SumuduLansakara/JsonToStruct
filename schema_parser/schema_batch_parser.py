@@ -2,6 +2,7 @@ import json
 import os
 from typing import List
 
+from schema_parser import configs
 from schema_parser.schema_parser import SchemaParser
 
 
@@ -34,7 +35,7 @@ class SchemaBatchParser:
     def _get_abs_path(self, schema_file: SchemaFile) -> str:
         return os.path.join(self._file_directory_offset, schema_file.file_path)
 
-    def parse(self):
+    def parse(self, namespace_offset: List[str]):
         for schema_file in self._build_order:
             with open(self._get_abs_path(schema_file)) as j_file:
                 try:
@@ -42,8 +43,11 @@ class SchemaBatchParser:
                 except:
                     print(f"failed loading file: {schema_file.file_path}", flush=True)
                     raise
+                ns_key = configs.CUSTOM_ATTR_PREFIX + 'namespace'
+                namespaces = schema_def[ns_key] if ns_key in schema_def else ""
                 try:
-                    self._parser.parse_root_level('#/definitions', schema_file.namespaces, schema_def["definitions"])
+                    self._parser.parse_root_level('#/definitions', namespace_offset + namespaces.split('::'),
+                                                  schema_def["definitions"])
                 except Exception as ex:
                     print(f"Failed parsing schema file [{schema_file.file_path}]")
                     raise

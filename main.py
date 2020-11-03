@@ -8,7 +8,9 @@ def start():
     batch_parser.add_schema_file('test.json', ['lui', 'common'])
 
     # batch_parser.add_schema_file('triggerConfiguration.json', 'configs')
-    batch_parser.parse()
+    batch_parser.set_dir_offset("sample_schema/riedel2")
+
+    batch_parser.parse(['core', 'messages'])
 
     code_gen = CodeGenerator(batch_parser.type_registry, 'include', 'src')
     code_gen.generate_headers()
