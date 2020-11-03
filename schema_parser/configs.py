@@ -1,0 +1,1 @@
+CUSTOM_ATTR_PREFIX = '@meta:'
