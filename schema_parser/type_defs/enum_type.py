@@ -1,6 +1,7 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, List
 
-from schema_parser.type_defs.type_def_base import TypeDefBase
+from schema_parser.reg_key import RegKey
+from schema_parser.type_defs.type_def_base import TypeDefBase, TypeDefKind
 from schema_parser.type_registry import TypeRegistry
 from schema_parser.utils.attribute_reader import read_custom_attrib
 
@@ -9,6 +10,9 @@ class EnumType(TypeDefBase):
     """Enum definition"""
     members: Dict[str, int]
     comments: Dict[str, str]
+
+    def __init__(self, namespaces: List[str], type_name: str, reg_key: RegKey):
+        super().__init__(namespaces, type_name, reg_key, TypeDefKind.EnumType)
 
     def parse(self, enum_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.members = {e: i for i, e in enumerate(enum_def['enum'])}
@@ -31,6 +35,5 @@ class EnumType(TypeDefBase):
     def dict(self):
         return {
             **super().dict(),
-            "kind": "enum",
             "members": self.members,
         }

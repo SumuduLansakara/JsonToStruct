@@ -1,8 +1,10 @@
 import os
+from typing import Union
 
 from code_generator.line_buffer import LineBuffer
 from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_enum import CppEnum
+from code_generator.type_generators.cpp_extended_variant import CppExtendedVariant
 from code_generator.type_generators.cpp_ref_alias import CppRefAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
 from code_generator.type_generators.cpp_struct import CppStruct
@@ -10,6 +12,7 @@ from code_generator.type_generators.cpp_variant_alias import CppVariantAlias
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
+from schema_parser.type_defs.extended_variant import ExtendedVariant
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
@@ -50,7 +53,8 @@ class CodeGenerator:
             raise
 
         # prepend include headers
-        if cpp_type_meta == CppStruct:
+
+        if cpp_type_meta in (CppStruct, CppExtendedVariant):
             prepend_lines = ['#pragma once']
             if cpp_type.header_includes:
                 prepend_lines.append('')
@@ -63,17 +67,17 @@ class CodeGenerator:
         #     header_file.write(cpp_header_code.str())
         print(cpp_header_code.str())
 
-    def _generate_cpp(self, type_def: StructType):
+    def _generate_cpp(self, cpp_type: Union[CppStruct, CppExtendedVariant]):
         cpp_src_code = LineBuffer(0)
-        cpp_struct = CppStruct(type_def)
-        cpp_struct.add_base_class('ISerializable')
-        cpp_struct.add_member_method('[[nodiscard]] std::string ToJson() const override;')
-        cpp_struct.add_member_method('void FromJson(const std::string&) override;')
-        cpp_struct.write_source(cpp_src_code, self.type_registry)
+        if isinstance(cpp_type, CppStruct):
+            cpp_type.add_base_class('ISerializable')
+            cpp_type.add_member_method('[[nodiscard]] std::string ToJson() const override;')
+            cpp_type.add_member_method('void FromJson(const std::string&) override;')
+        cpp_type.write_source(cpp_src_code, self.type_registry)
 
         # prepend include headers
-        prepend_lines = [f'#include <{self.get_header_file_path(type_def)}>']
-        for include in cpp_struct.cpp_includes:
+        prepend_lines = [f'#include <{self.get_header_file_path(cpp_type.type_def)}>']
+        for include in cpp_type.cpp_includes:
             prepend_lines.append(f"#include <{include}>")
         prepend_lines.append('')
         cpp_src_code.prepend(*prepend_lines)
@@ -90,6 +94,7 @@ class CodeGenerator:
             VariantAlias: CppVariantAlias,
             EnumType: CppEnum,
             StructType: CppStruct,
+            ExtendedVariant: CppExtendedVariant,
             RefType: CppRefAlias,
         }
         if type(type_def) not in cpp_type_map:
@@ -102,7 +107,7 @@ class CodeGenerator:
         cpp_type = cpp_type_meta(type_def)
         self._generate_header(cpp_type_meta, cpp_type, type_def)
         if isinstance(type_def, StructType):
-            self._generate_cpp(type_def)
+            self._generate_cpp(cpp_type)
 
     def generate_code(self):
         for type_def in self.type_registry:
@@ -110,7 +115,8 @@ class CodeGenerator:
                 cpp_type_meta = self.get_cpp_type(type_def)
                 cpp_type = cpp_type_meta(type_def)
                 self._generate_header(cpp_type_meta, cpp_type, type_def)
-                if isinstance(type_def, StructType):
-                    self._generate_cpp(type_def)
+                if isinstance(type_def, (StructType, ExtendedVariant)):
+                    self._generate_cpp(cpp_type)
             except Exception as ex:
                 print(ex)
+                raise

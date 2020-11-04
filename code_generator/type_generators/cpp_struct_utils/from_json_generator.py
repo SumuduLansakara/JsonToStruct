@@ -5,6 +5,7 @@ from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_simple_alias import CppSimpleAlias
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
+from schema_parser.type_defs.extended_variant import ExtendedVariant
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
@@ -53,7 +54,7 @@ class FromJsonWriter:
                 self._load_ref_member(member_def)
             elif isinstance(member_def, VariantAlias):
                 self._load_variant_member(member_def)
-            elif isinstance(member_def, (EnumType, StructType)):
+            elif isinstance(member_def, (EnumType, StructType, ExtendedVariant)):
                 pass
             else:
                 raise TypeError(f"Unsupported member type: {member_def}")

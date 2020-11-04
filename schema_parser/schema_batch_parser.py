@@ -35,7 +35,7 @@ class SchemaBatchParser:
     def _get_abs_path(self, schema_file: SchemaFile) -> str:
         return os.path.join(self._file_directory_offset, schema_file.file_path)
 
-    def parse(self, namespace_offset: List[str]):
+    def parse(self, ns_offset: List[str]):
         for schema_file in self._build_order:
             with open(self._get_abs_path(schema_file)) as j_file:
                 try:
@@ -44,10 +44,9 @@ class SchemaBatchParser:
                     print(f"failed loading file: {schema_file.file_path}", flush=True)
                     raise
                 ns_key = configs.CUSTOM_ATTR_PREFIX + 'namespace'
-                namespaces = schema_def[ns_key] if ns_key in schema_def else ""
+                namespaces = ns_offset + schema_def[ns_key].split('::') if ns_key in schema_def else ns_offset
                 try:
-                    self._parser.parse_root_level('#/definitions', namespace_offset + namespaces.split('::'),
-                                                  schema_def["definitions"])
+                    self._parser.parse_root_level('#/definitions', namespaces, schema_def["definitions"])
                 except Exception as ex:
                     print(f"Failed parsing schema file [{schema_file.file_path}]")
                     raise

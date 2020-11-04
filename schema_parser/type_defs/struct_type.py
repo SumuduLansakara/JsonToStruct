@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import List, Dict, Callable
 
 from schema_parser import configs
+from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.ref_type import RefType
-from schema_parser.type_defs.type_def_base import TypeDefBase
+from schema_parser.type_defs.type_def_base import TypeDefBase, TypeDefKind
 from schema_parser.type_registry import TypeRegistry
 from schema_parser.utils import attribute_reader
 from schema_parser.utils.attribute_reader import read_custom_attrib
@@ -13,6 +14,9 @@ from schema_parser.utils.attribute_reader import read_custom_attrib
 
 class StructType(TypeDefBase):
     members: List[TypeDefBase]
+
+    def __init__(self, namespaces: List[str], type_name: str, reg_key: RegKey):
+        super().__init__(namespaces, type_name, reg_key, TypeDefKind.StructType)
 
     def parse(self, struct_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.members = []
@@ -50,7 +54,7 @@ class StructType(TypeDefBase):
                 # -- provided name is given to the member variable
                 # -- if the provided name starts with a lower-case letter, upper cased form is taken as type name.
                 #    Otherwise it typename must have been explicitly provided via custom attribute 'typename'
-                if isinstance(td, (StructType, EnumType)):
+                if td.kind in (TypeDefKind.StructType, TypeDefKind.EnumType, TypeDefKind.ExtendedVariantType):
                     mem_type_name = read_custom_attrib(mem_def, 'typename', mem_name[0].upper() + mem_name[1:])
                     if mem_name == mem_type_name:
                         raise NameError(f"Unable to deduce a non colliding name for inner type of struct: "
@@ -71,6 +75,5 @@ class StructType(TypeDefBase):
     def dict(self):
         return {
             **super().dict(),
-            "kind": "struct",
             "members": [t_def.dict() for t_def in self.members]
         }

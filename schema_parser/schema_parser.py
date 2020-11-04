@@ -1,9 +1,9 @@
 from typing import Dict, List
 
 from schema_parser.reg_key import RegKey
-from schema_parser.type_parser import create_typedef
 from schema_parser.type_registry import TypeRegistry
 from schema_parser.utils import attribute_reader
+from schema_parser.utils.type_parser import create_typedef
 
 
 class SchemaParser:

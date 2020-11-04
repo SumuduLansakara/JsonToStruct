@@ -2,14 +2,15 @@ from typing import Dict, Type
 
 from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.enum_type import EnumType
+from schema_parser.type_defs.extended_variant import ExtendedVariant
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
 from schema_parser.type_defs.struct_type import StructType
-from schema_parser.type_defs.type_def_base import TypeDefBase
 from schema_parser.type_defs.variant_alias import VariantAlias
+from schema_parser.utils.attribute_reader import read_custom_attrib
 
 
-def get_object_type(schema_def: Dict) -> Type[TypeDefBase]:
+def get_object_type(schema_def: Dict) -> Type:
     if 'enum' in schema_def:
         return EnumType
 
@@ -35,6 +36,9 @@ def get_object_type(schema_def: Dict) -> Type[TypeDefBase]:
         return ArrayAlias
 
     if type_str == 'object':
+        cpp_type = read_custom_attrib(schema_def, 'cpp_type')
+        if cpp_type == 'extended_variant':
+            return ExtendedVariant
         if 'properties' not in schema_def:
             raise ValueError(f"Struct definition without properties [{schema_def}]")
         return StructType
