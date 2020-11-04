@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Callable, List
 
+from schema_parser import configs
 from schema_parser.reg_key import RegKey
 from schema_parser.type_defs.enum_type import EnumType
 from schema_parser.type_defs.type_def_base import TypeDefBase, TypeDefKind
@@ -27,7 +28,9 @@ class ExtendedVariant(TypeDefBase):
         properties = struct_def['properties']
 
         enum_reg_key = self.reg_key.parent().add_leaf('type')
-        tds = creator_fn(enum_reg_key, [], 'type', properties['type'], type_registry)
+        enum_def_schema = properties['type']
+        enum_def_schema[configs.CUSTOM_ATTR_PREFIX + 'enum_values'] = {enum_def_schema['enum'][0]: 1}
+        tds = creator_fn(enum_reg_key, [], 'type', enum_def_schema, type_registry)
         if len(tds) != 1 or not isinstance(tds[0], EnumType):
             raise ValueError(f"Extended enum property 'type' must be an enum: {properties['type']}")
         self.type_enum = tds[0]

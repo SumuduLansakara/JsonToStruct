@@ -1,5 +1,6 @@
 from code_generator.line_buffer import LineBuffer, IndentedBlock
 from schema_parser.type_defs.enum_type import EnumType
+from schema_parser.type_defs.extended_variant import ExtendedVariant
 from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_defs.type_def_base import TypeDefBase
 from schema_parser.type_registry import TypeRegistry
@@ -32,6 +33,6 @@ class ToJsonWriter:
         self.buffer.append('return res;')
 
     def member_to_json(self, member: TypeDefBase):
-        if isinstance(member, (EnumType, StructType)):
+        if isinstance(member, (EnumType, StructType, ExtendedVariant)):
             return
         self.buffer.append(f'{{ "{member.type_name}", m.{member.type_name} }}')

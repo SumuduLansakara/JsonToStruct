@@ -46,7 +46,7 @@ class CppExtendedVariant(CppTypeBase):
             suffix = ' : ' + ', '.join(self.base_classes)
         else:
             suffix = ''
-        variant_members = []
+        variant_members = ['std::monostate']
         for member_type_def in self.type_def.content_variant.member_type_defs:
             if isinstance(member_type_def, SimpleAlias):
                 cpp_alias = CppSimpleAlias(member_type_def)
@@ -73,22 +73,29 @@ class CppExtendedVariant(CppTypeBase):
             cpp_enum.write_header(buffer, type_registry)
             buffer.append('')
 
+            cast_expr = f'static_cast<{self.type_def.type_enum.underlying_type}>(MemberType)'
             # write setter
             buffer.append('template <Type MemberType, typename T>')
-            buffer.append(f'void SetAs(T value)')
-            buffer.append('{')
-            with IndentedBlock(buffer):
-                buffer.append(f'emplace<MemberType>(value);')
-            buffer.append('}')
-            buffer.append('')
+            buffer.append(f'void SetAs(T value) ')
+            buffer.extend_last('{ ')
+            buffer.extend_last(f'emplace<{cast_expr}>(value);')
+            buffer.extend_last(' }')
+            buffer.new_line()
 
-            # write setter
+            # write non-const getter
             buffer.append('template <Type MemberType>')
-            buffer.append(f'T GetAs()')
-            buffer.append('{')
-            with IndentedBlock(buffer):
-                buffer.append(f'return std::get<MemberType>(*this);')
-            buffer.append('}')
+            buffer.append(f'[[nodiscard]] auto& GetAs() ')
+            buffer.extend_last('{ ')
+            buffer.extend_last(f'return std::get<{cast_expr}>(*this);')
+            buffer.extend_last(' }')
+            buffer.new_line()
+
+            # write const getter
+            buffer.append('template <Type MemberType>')
+            buffer.append(f'[[nodiscard]] auto const& GetAs() const ')
+            buffer.extend_last('{ ')
+            buffer.extend_last(f'return std::get<{cast_expr}>(*this);')
+            buffer.extend_last(' }')
 
             # pre-defined methods
             with IndentedBlock(buffer):

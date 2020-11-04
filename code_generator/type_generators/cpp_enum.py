@@ -11,7 +11,7 @@ class CppEnum(CppTypeBase):
         return self.type_def.type_name
 
     def write_header(self, buffer: LineBuffer, _type_registry: TypeRegistry) -> None:
-        buffer.append(f"enum class {self.enum_name()}")
+        buffer.append(f"enum class {self.enum_name()} : {self.type_def.underlying_type}")
         buffer.append('{')
         with IndentedBlock(buffer):
             if self.type_def.members:

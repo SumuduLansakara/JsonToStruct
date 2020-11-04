@@ -10,12 +10,15 @@ class EnumType(TypeDefBase):
     """Enum definition"""
     members: Dict[str, int]
     comments: Dict[str, str]
+    underlying_type: str
 
     def __init__(self, namespaces: List[str], type_name: str, reg_key: RegKey):
         super().__init__(namespaces, type_name, reg_key, TypeDefKind.EnumType)
 
     def parse(self, enum_def: Dict, creator_fn: Callable, type_registry: TypeRegistry):
         self.members = {e: i for i, e in enumerate(enum_def['enum'])}
+
+        self.underlying_type = read_custom_attrib(enum_def, 'enum_underlying_type', 'int32_t')
 
         # use explicitly defined enum values
         enum_values = read_custom_attrib(enum_def, 'enum_values')

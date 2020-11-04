@@ -40,6 +40,9 @@ class LineBuffer:
     def append(self, line: str):
         self._lines.append(self._prefix + line)
 
+    def extend_last(self, segment: str):
+        self._lines[-1] += segment
+
     def append_buffer(self, buffer: LineBuffer):
         self._lines.extend([self._prefix + line for line in buffer._lines])
 
