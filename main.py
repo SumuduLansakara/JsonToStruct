@@ -4,17 +4,18 @@ from schema_parser.schema_batch_parser import SchemaBatchParser
 
 def start():
     batch_parser = SchemaBatchParser()
-    batch_parser.set_dir_offset("sample_schema")
-    batch_parser.add_schema_file('test.json', ['lui', 'common'])
 
-    # batch_parser.add_schema_file('triggerConfiguration.json', 'configs')
-    batch_parser.set_dir_offset("sample_schema/riedel2")
+    batch_parser.set_input_dir("example/schemas")
+    batch_parser.add_schema_file('simple_alias.json')
+    batch_parser.add_schema_file('array_alias.json')
+    batch_parser.add_schema_file('struct.json')
+    batch_parser.add_schema_file('type_reference.json')
+    batch_parser.add_schema_file('extended_variant.json')
 
     batch_parser.parse(['core', 'messages'])
 
-    code_gen = CodeGenerator(batch_parser.type_registry, 'include', 'src')
-    code_gen.generate_headers()
-    code_gen.generate_sources()
+    code_gen = CodeGenerator(batch_parser.type_registry, 'temp_generated', 'include', 'src')
+    code_gen.generate_code()
 
 
 if __name__ == '__main__':

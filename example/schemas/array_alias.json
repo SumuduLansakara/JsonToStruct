@@ -1,0 +1,11 @@
+{
+  "@meta:comment": "Array aliases are also defined with simple aliases in the same common header file",
+  "definitions": {
+    "MyStringArray": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

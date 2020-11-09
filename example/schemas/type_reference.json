@@ -1,0 +1,24 @@
+{
+  "definitions": {
+    "MyNumberType": {
+      "type": "integer"
+    },
+    "MyNumberArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MyNumberType"
+      }
+    },
+    "MyStruct": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "$ref": "#/definitions/MyNumberType"
+        },
+        "numberArray": {
+          "$ref": "#/definitions/MyNumberArray"
+        }
+      }
+    }
+  }
+}

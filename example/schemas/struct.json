@@ -1,0 +1,23 @@
+{
+  "@meta:comment": "All the simple aliases are defined in single header file per namespace",
+  "definitions": {
+    "Student": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "number"
+        },
+        "scores": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "@meta:cpp_type": "int64_t"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "@meta:comment": "All the simple aliases are defined in single header file per namespace",
+  "definitions": {
+    "MyDefaultInt": {
+      "type": "integer",
+      "@meta:comment": "default cpp type for integer is int32_t"
+    },
+    "MyInt64": {
+      "type": "integer",
+      "@meta:cpp_type": "int64_t",
+      "@meta:comment": "default type can be overridden using 'coo_type' custom meta attribute"
+    }
+  }
+}
