@@ -1,3 +1,4 @@
+![stability-wip](https://img.shields.io/badge/stability-work_in_progress-lightgrey.svg)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![License](https://img.shields.io/github/license/SumuduLansakara/JsonToStruct)](https://github.com/SumuduLansakara/JsonToStruct/blob/master/LICENSE)
 [![Stars](https://img.shields.io/github/stars/SumuduLansakara/JsonToStruct?style=social)](https://github.com/SumuduLansakara/JsonToStruct/stargazers)
