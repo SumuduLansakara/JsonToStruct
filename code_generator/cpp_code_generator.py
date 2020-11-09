@@ -1,7 +1,9 @@
 import os
-from typing import Union
+import pathlib
+from typing import Union, Dict, List, Set
 
-from code_generator.line_buffer import LineBuffer
+from code_generator.code_writers.header_code_writer import HeaderCodeWriter
+from code_generator.line_buffer import LineBuffer, IndentedBlock
 from code_generator.type_generators.cpp_array_alias import CppArrayAlias
 from code_generator.type_generators.cpp_enum import CppEnum
 from code_generator.type_generators.cpp_extended_variant import CppExtendedVariant
@@ -21,51 +23,105 @@ from schema_parser.type_defs.variant_alias import VariantAlias
 from schema_parser.type_registry import TypeRegistry
 
 
+class TypeHeaderWriter:
+    namespaces: Dict[str, List[str]]
+    buffers: Dict[str, List[LineBuffer]]
+    include_headers: Dict[str, List[str]]
+
+    def __init__(self):
+        self.namespaces = {}
+        self.buffers = {}
+        self.include_headers = {}
+
+    @staticmethod
+    def _make_ns_key(namespaces: List[str]) -> str:
+        return '/'.join(namespaces)
+
+    def add_to_namespace(self, namespaces: List[str], buffer: LineBuffer, headers: Set[str]):
+        ns_key = self._make_ns_key(namespaces)
+        if ns_key not in self.namespaces:
+            self.namespaces[ns_key] = namespaces
+            self.buffers[ns_key] = []
+            self.include_headers[ns_key] = []
+        self.buffers[ns_key].append(buffer)
+        self.include_headers[ns_key].extend(headers)
+
+    def get_type_header_buffer(self, namespaces: List[str]) -> LineBuffer:
+        ns_key = self._make_ns_key(namespaces)
+        if ns_key not in self.include_headers:
+            raise NameError(f"No namespace type info: {ns_key}")
+
+        buffer = LineBuffer(0)
+        if self.include_headers[ns_key]:
+            buffer.new_line()
+            for include in self.include_headers[ns_key]:
+                buffer.append(f"#include <{include}>")
+        buffer.new_line()
+        ns_str = "::".join(namespaces)
+        buffer.append(f'namespace {ns_str}')
+        buffer.append('{')
+        with IndentedBlock(buffer):
+            for buf in self.buffers[ns_key]:
+                buffer.append_buffer(buf)
+        buffer.append(f'}} // {ns_str}')
+
+        return buffer
+
+    def get_type_header_includes(self, namespaces: List[str]) -> List[str]:
+        ns_key = self._make_ns_key(namespaces)
+        if ns_key not in self.include_headers:
+            raise NameError(f"No namespace type info: {ns_key}")
+        return self.include_headers[ns_key]
+
+
 class CodeGenerator:
     type_registry: TypeRegistry
     src_root_dir: str
     header_dir: str
     cpp_dir: str
+    type_header_writer: TypeHeaderWriter
 
-    def get_header_file_path(self, struct_def: StructType) -> str:
-        return os.path.join(self.header_dir, *struct_def.namespaces, struct_def.type_name + '.h')
+    def get_header_file_path(self, namespaces: List[str], file_name_prefix: str) -> pathlib.Path:
+        return pathlib.Path(
+            os.path.join(self.src_root_dir, self.header_dir, *namespaces, f"{file_name_prefix}.h"))
 
-    def get_cpp_file_path(self, struct_def: StructType) -> str:
-        return os.path.join(self.cpp_dir, *struct_def.namespaces, struct_def.type_name + '.cpp')
+    def get_cpp_file_path(self, struct_def: StructType) -> pathlib.Path:
+        return pathlib.Path(
+            os.path.join(self.src_root_dir, self.cpp_dir, *struct_def.namespaces, struct_def.type_name + '.cpp'))
 
     def __init__(self, type_registry: TypeRegistry, src_root_dir: str, header_dir: str, cpp_dir: str):
         self.type_registry = type_registry
         self.src_root_dir = src_root_dir
         self.header_dir = header_dir
         self.cpp_dir = cpp_dir
+        self.type_header_writer = TypeHeaderWriter()
 
     def _generate_header(self, cpp_type_meta, cpp_type, type_def: TypeDefBase):
-        cpp_header_code = LineBuffer(0)
         if cpp_type_meta == CppStruct:
             cpp_type.add_base_class('ISerializable')
             cpp_type.add_member_method('[[nodiscard]] std::string ToJson() const override;')
             cpp_type.add_member_method('void FromJson(const std::string&) override;')
 
+        header_code = LineBuffer(0)
+
         try:
-            cpp_type.write_header(cpp_header_code, self.type_registry)
+            cpp_type.write_header(header_code, self.type_registry)
         except Exception as ex:
             print(f"Failed writing header: {type_def.type_name} [{ex}]")
             raise
 
         # prepend include headers
-
         if cpp_type_meta in (CppStruct, CppExtendedVariant):
-            prepend_lines = ['#pragma once']
-            if cpp_type.header_includes:
-                prepend_lines.append('')
-                for include in cpp_type.header_includes:
-                    prepend_lines.append(f"#include <{include}>")
-            prepend_lines.append('')
-            cpp_header_code.prepend(*prepend_lines)
+            header_writer = HeaderCodeWriter(header_code)
+            header_writer.include_headers.extend(cpp_type.header_includes)
 
-        # with open(os.path.join(self.src_root_dir, self.get_header_file_path(type_def)), 'w') as header_file:
-        #     header_file.write(cpp_header_code.str())
-        print(cpp_header_code.str())
+            header_path = self.get_header_file_path(type_def.namespaces, type_def.type_name)
+            pathlib.Path(header_path.parent).mkdir(parents=True, exist_ok=True)
+            with open(header_path, 'w') as header_file:
+                header_file.write(header_writer.str())
+        else:
+            self.type_header_writer.add_to_namespace(cpp_type.type_def.namespaces, header_code,
+                                                     cpp_type.header_includes)
 
     def _generate_cpp(self, cpp_type: Union[CppStruct, CppExtendedVariant]):
         cpp_src_code = LineBuffer(0)
@@ -76,15 +132,17 @@ class CodeGenerator:
         cpp_type.write_source(cpp_src_code, self.type_registry)
 
         # prepend include headers
-        prepend_lines = [f'#include <{self.get_header_file_path(cpp_type.type_def)}>']
+        header_path = self.get_header_file_path(cpp_type.type_def.namespaces, cpp_type.type_def.type_name)
+        prepend_lines = [f'#include <{header_path}>']
         for include in cpp_type.cpp_includes:
             prepend_lines.append(f"#include <{include}>")
         prepend_lines.append('')
         cpp_src_code.prepend(*prepend_lines)
 
-        # with open(os.path.join(self.src_root_dir, self.get_cpp_file_path(type_def)), 'w') as cpp_file:
-        #     cpp_file.write(cpp_src_code.str())
-        print(cpp_src_code.str())
+        cpp_path = self.get_cpp_file_path(cpp_type.type_def)
+        pathlib.Path(cpp_path.parent).mkdir(parents=True, exist_ok=True)
+        with open(cpp_path, 'w') as header_file:
+            header_file.write(cpp_src_code.str())
 
     @staticmethod
     def get_cpp_type(type_def: TypeDefBase):
@@ -110,13 +168,28 @@ class CodeGenerator:
             self._generate_cpp(cpp_type)
 
     def generate_code(self):
-        for type_def in self.type_registry:
-            try:
-                cpp_type_meta = self.get_cpp_type(type_def)
-                cpp_type = cpp_type_meta(type_def)
-                self._generate_header(cpp_type_meta, cpp_type, type_def)
-                if isinstance(type_def, (StructType, ExtendedVariant)):
-                    self._generate_cpp(cpp_type)
-            except Exception as ex:
-                print(ex)
-                raise
+        build_order = [EnumType, SimpleAlias, StructType, RefType, ArrayAlias, VariantAlias, ExtendedVariant]
+        for bo in build_order:
+            for type_def in self.type_registry:
+                if not isinstance(type_def, bo):
+                    continue
+
+                try:
+                    cpp_type_meta = self.get_cpp_type(type_def)
+                    cpp_type = cpp_type_meta(type_def)
+                    self._generate_header(cpp_type_meta, cpp_type, type_def)
+                    if isinstance(type_def, (StructType, ExtendedVariant)):
+                        self._generate_cpp(cpp_type)
+                except Exception as ex:
+                    if 'AudioPatchConfigId' in str(ex):
+                        continue
+                    print(ex)
+
+        # write shared type header
+        for ns_key, namespaces in self.type_header_writer.namespaces.items():
+            header_writer = HeaderCodeWriter(self.type_header_writer.get_type_header_buffer(namespaces))
+            header_writer.include_headers.extend(self.type_header_writer.get_type_header_includes(namespaces))
+            header_path = self.get_header_file_path(namespaces, f'Types{namespaces[-1].capitalize()}')
+            pathlib.Path(header_path.parent).mkdir(parents=True, exist_ok=True)
+            with open(header_path, 'w') as header_file:
+                header_file.write(header_writer.str())
