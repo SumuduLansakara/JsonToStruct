@@ -3,3 +3,4 @@
 /sample_json/
 /sample_schema/
 __pycache__/
+/temp_*
