@@ -24,7 +24,6 @@ class CppStruct(CppTypeBase):
     type_def: StructType
     base_classes: Set[str]
     member_methods: Set[str]
-    header_includes: Set[str]
     cpp_includes: Set[str]
 
     def __init__(self, type_def: StructType):

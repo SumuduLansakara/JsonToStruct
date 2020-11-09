@@ -11,6 +11,7 @@ from schema_parser.type_defs.array_alias import ArrayAlias
 from schema_parser.type_defs.extended_variant import ExtendedVariant
 from schema_parser.type_defs.ref_type import RefType
 from schema_parser.type_defs.simple_alias import SimpleAlias
+from schema_parser.type_defs.struct_type import StructType
 from schema_parser.type_registry import TypeRegistry
 
 
@@ -54,12 +55,14 @@ class CppExtendedVariant(CppTypeBase):
             elif isinstance(member_type_def, ArrayAlias):
                 cpp_array = CppArrayAlias(member_type_def)
                 variant_members.append(cpp_array.actual_type(type_registry))
-            # elif isinstance(member_type_def, StructType):
-            #     cpp_struct = CppStruct(member_type_def)
-            #     variant_members.append(cpp_struct.type_def.type_name)
+            elif isinstance(member_type_def, StructType):
+                #     cpp_struct = CppStruct(member_type_def)
+                #     variant_members.append(cpp_struct.type_def.type_name)
+                pass
             elif isinstance(member_type_def, RefType):
-                target_type = type_registry.get_ref_target(member_type_def.target_uri)
-                variant_members.append(target_type.type_name)
+                #     target_type = type_registry.get_ref_target(member_type_def.target_uri)
+                #     variant_members.append(target_type.type_name)
+                pass
             else:
                 raise TypeError(f"Unsupported struct member type: [{member_type_def}]")
 

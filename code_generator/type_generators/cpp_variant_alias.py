@@ -8,6 +8,10 @@ from schema_parser.type_registry import TypeRegistry
 class CppVariantAlias(CppTypeBase):
     type_def: VariantAlias
 
+    def __init__(self, type_def):
+        super().__init__(type_def)
+        self.header_includes.add('variant')
+
     def write_header(self, buffer: LineBuffer, type_registry: TypeRegistry) -> None:
         buffer.append(f"using {self.type_def.type_name} = {self.actual_type(type_registry)};")
 
