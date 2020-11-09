@@ -12,7 +12,7 @@ def start():
     batch_parser.add_schema_file('type_reference.json')
     batch_parser.add_schema_file('extended_variant.json')
 
-    batch_parser.parse(['core', 'messages'])
+    batch_parser.parse(['core'])
 
     code_gen = CodeGenerator(batch_parser.type_registry, 'temp_generated', 'include', 'src')
     code_gen.generate_code()

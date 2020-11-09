@@ -1,29 +1,28 @@
 {
   "definitions": {
-    "MyVariant": {
+    "MyExtendedVariant": {
       "type": "object",
       "@meta:cpp_type": "extended_variant",
-      "@meta:comment": "Extended variant definition is a special case of a struct. Struct member count and names must match the example definition",
       "properties": {
         "type": {
           "enum": [
-            "MyStrMember",
-            "MyIntMember",
-            "MyBoolArray"
+            "int",
+            "str",
+            "array"
           ]
         },
         "content": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "integer"
             },
             {
-              "type": "integer"
+              "type": "string"
             },
             {
               "type": "array",
               "items": {
-                "type": "boolean"
+                "type": "number"
               }
             }
           ]
